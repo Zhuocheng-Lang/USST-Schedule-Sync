@@ -11,7 +11,7 @@ interface ExportActionOptions {
   startInp: HTMLInputElement;
   tzSel: HTMLSelectElement;
   readConfig: () => Config;
-  setStatus: (message: string, className: string) => void;
+  setStatus: (message: string, tone: "ok" | "error" | "info") => void;
 }
 
 export function handleExportAction({
@@ -25,7 +25,7 @@ export function handleExportAction({
   const tzid = tzSel.value;
 
   if (!semStart) {
-    setStatus("⚠️ 请填写学期开始日期", "ics-err");
+    setStatus("⚠️ 请填写学期开始日期", "error");
     startInp.focus();
     return;
   }
@@ -36,19 +36,19 @@ export function handleExportAction({
     const dayNames = "日一二三四五六";
     setStatus(
       `⚠️ ${semStart} 是星期${dayNames[weekDay]}，请填写周一的日期`,
-      "ics-err",
+      "error",
     );
     startInp.focus();
     return;
   }
 
-  setStatus("解析课表中…", "ics-inf");
+  setStatus("解析课表中…", "info");
 
   setTimeout(() => {
     try {
       const courses = extractCourses();
       if (!courses.length) {
-        setStatus("⚠️ 未找到课程数据，请先点击「查询」加载课表", "ics-err");
+        setStatus("⚠️ 未找到课程数据，请先点击「查询」加载课表", "error");
         return;
       }
 
@@ -73,12 +73,12 @@ export function handleExportAction({
       const alarmSummary = alarmCount ? `${alarmCount} 条提醒` : "无提醒";
       setStatus(
         `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,
-        "ics-ok",
+        "ok",
       );
     } catch (error) {
       setStatus(
         `❌ 导出失败：${error instanceof Error ? error.message : String(error)}`,
-        "ics-err",
+        "error",
       );
       console.error("[ICS Exporter]", error);
     }

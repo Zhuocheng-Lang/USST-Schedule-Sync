@@ -69,7 +69,7 @@ export default defineConfig({
         updateURL: releaseAssetUrl,
         downloadURL: releaseAssetUrl,
         match: ["*://jwgl.usst.edu.cn/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html*"],
-        grant: ["GM_getValue", "GM_setValue"],
+        grant: ["GM_addStyle", "GM_getValue", "GM_setValue"],
         "run-at": "document-idle",
         noframes: true,
       },

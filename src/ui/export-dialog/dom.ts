@@ -4,7 +4,56 @@
 
 import type { Config } from "../../types";
 import { makeAlarmRow, makePeriodRow } from "../builders";
-import { CSS } from "../css";
+import { cx, styles } from "../css";
+
+function createTableHead(labels: readonly string[]): HTMLTableSectionElement {
+  const thead = document.createElement("thead");
+  const row = document.createElement("tr");
+
+  for (const label of labels) {
+    const th = document.createElement("th");
+    th.textContent = label;
+    row.appendChild(th);
+  }
+
+  thead.appendChild(row);
+  return thead;
+}
+
+function createAlarmTipContent(): DocumentFragment {
+  const fragment = document.createDocumentFragment();
+  const code = document.createElement("code");
+  code.textContent = "VALARM";
+  fragment.append(
+    "每条规则在每个日历事件中写入一个 ",
+    code,
+    "，可叠加多条。",
+    document.createElement("br"),
+  );
+
+  const display = document.createElement("b");
+  display.textContent = "静默通知";
+  const recommended = document.createElement("i");
+  recommended.textContent = "推荐";
+  fragment.append(
+    display,
+    "：仅弹通知横幅，不响铃（",
+    recommended,
+    "）。",
+    document.createElement("br"),
+  );
+
+  const audio = document.createElement("b");
+  audio.textContent = "响铃提醒";
+  fragment.append(
+    audio,
+    "：播放系统提示音（Apple Calendar / Outlook 支持）。",
+    document.createElement("br"),
+  );
+  fragment.append("全部关闭 = 不写入任何提醒。");
+
+  return fragment;
+}
 
 export interface DialogElements {
   backdrop: HTMLDivElement;
@@ -28,42 +77,54 @@ export function createDialogElements(
   cfg: Config,
   defaultDate: string,
 ): DialogElements {
-  const styleEl = Object.assign(document.createElement("style"), {
-    textContent: CSS,
-  });
-  document.head.appendChild(styleEl);
-
   const backdrop = Object.assign(document.createElement("div"), {
     id: "ics-backdrop",
+    className: styles.backdrop,
   });
   backdrop.setAttribute("aria-hidden", "true");
   document.body.appendChild(backdrop);
 
   const dialog = Object.assign(document.createElement("div"), {
     id: "ics-dialog",
+    className: styles.dialog,
   });
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", "true");
   dialog.setAttribute("aria-labelledby", "ics-dialog-title");
+  dialog.setAttribute("aria-hidden", "true");
 
   const header = document.createElement("div");
-  header.className = "ics-header";
-  header.innerHTML =
-    `<div class="ics-header-title">` +
-    `<div class="ics-logo" aria-hidden="true">📅</div>` +
-    `<div><div class="ics-title-text" id="ics-dialog-title">导出日历</div>` +
-    `<div class="ics-title-sub">Export to .ics · iCalendar RFC 5545</div></div>` +
-    `</div>`;
+  header.className = styles.header;
+  const headerTitle = document.createElement("div");
+  headerTitle.className = styles.headerTitle;
+  const logo = Object.assign(document.createElement("div"), {
+    className: styles.logo,
+    textContent: "📅",
+  });
+  logo.setAttribute("aria-hidden", "true");
+  const titleWrap = document.createElement("div");
+  const titleText = Object.assign(document.createElement("div"), {
+    id: "ics-dialog-title",
+    className: styles.titleText,
+    textContent: "导出日历",
+  });
+  const titleSub = Object.assign(document.createElement("div"), {
+    className: styles.titleSub,
+    textContent: "Export to .ics · iCalendar RFC 5545",
+  });
+  titleWrap.append(titleText, titleSub);
+  headerTitle.append(logo, titleWrap);
   const closeBtn = Object.assign(document.createElement("button"), {
     type: "button",
-    className: "ics-close-btn",
+    className: styles.closeButton,
     title: "关闭 (Esc)",
     textContent: "✕",
   });
-  header.appendChild(closeBtn);
+  closeBtn.setAttribute("aria-label", "关闭对话框");
+  header.append(headerTitle, closeBtn);
 
   const tabBar = document.createElement("div");
-  tabBar.className = "ics-tabs";
+  tabBar.className = styles.tabs;
   tabBar.setAttribute("role", "tablist");
   const tabDefs = [
     { id: "export", label: "导出设置" },
@@ -71,59 +132,69 @@ export function createDialogElements(
     { id: "alarm", label: "课前提醒" },
   ] as const;
   for (const { id, label } of tabDefs) {
+    const isActive = id === "export";
     const btn = Object.assign(document.createElement("button"), {
       type: "button",
-      className: "ics-tab-btn" + (id === "export" ? " active" : ""),
+      id: `ics-tab-btn-${id}`,
+      className: cx(styles.tabButton, isActive && styles.active),
       textContent: label,
     });
     btn.dataset.tab = id;
+    btn.dataset.role = "tab-button";
     btn.setAttribute("role", "tab");
-    btn.setAttribute("aria-selected", String(id === "export"));
+    btn.setAttribute("aria-selected", String(isActive));
     btn.setAttribute("aria-controls", `ics-tab-${id}`);
     tabBar.appendChild(btn);
   }
 
   const panelsEl = Object.assign(document.createElement("div"), {
-    className: "ics-panels",
+    className: styles.panels,
   });
 
   const panelExport = Object.assign(document.createElement("div"), {
-    className: "ics-panel active",
+    className: cx(styles.panel, styles.active),
     id: "ics-tab-export",
   });
+  panelExport.dataset.role = "tab-panel";
   panelExport.setAttribute("role", "tabpanel");
-  panelExport.setAttribute("aria-labelledby", "tab-export");
+  panelExport.setAttribute("aria-labelledby", "ics-tab-btn-export");
 
   const twoCol = document.createElement("div");
-  twoCol.className = "ics-two-col";
+  twoCol.className = styles.twoColumn;
 
   const rowDate = document.createElement("div");
-  rowDate.className = "ics-row";
+  rowDate.className = styles.row;
   const lblDate = document.createElement("div");
-  lblDate.className = "ics-label";
-  lblDate.innerHTML = `学期第 1 周周一 <span class="ics-req" aria-label="必填">*</span>`;
+  lblDate.className = styles.label;
+  lblDate.append("学期第 1 周周一 ");
+  const req = Object.assign(document.createElement("span"), {
+    className: styles.required,
+    textContent: "*",
+  });
+  req.setAttribute("aria-label", "必填");
+  lblDate.appendChild(req);
   const startInp = Object.assign(document.createElement("input"), {
     type: "date",
     id: "ics-semester-start",
-    className: "ics-field",
+    className: styles.field,
     value: defaultDate,
   });
   startInp.setAttribute("aria-required", "true");
   const tipDate = Object.assign(document.createElement("div"), {
-    className: "ics-tip",
+    className: styles.tip,
     textContent: "第一教学周的周一日期",
   });
   rowDate.append(lblDate, startInp, tipDate);
 
   const rowTz = document.createElement("div");
-  rowTz.className = "ics-row";
+  rowTz.className = styles.row;
   const lblTz = Object.assign(document.createElement("div"), {
-    className: "ics-label",
+    className: styles.label,
     textContent: "时区",
   });
   const tzSel = Object.assign(document.createElement("select"), {
     id: "ics-tzid",
-    className: "ics-field",
+    className: styles.field,
   });
   for (const [value, label] of [
     ["Asia/Shanghai", "北京时间 (CST +8)"],
@@ -144,51 +215,52 @@ export function createDialogElements(
   twoCol.append(rowDate, rowTz);
 
   const previewHd = Object.assign(document.createElement("div"), {
-    className: "ics-section-hd",
+    className: styles.sectionHeading,
     textContent: "节次时间预览",
   });
   const previewList = Object.assign(document.createElement("ul"), {
-    className: "ics-preview",
+    className: styles.preview,
     id: "ics-preview-list",
   });
 
   panelExport.append(twoCol, previewHd, previewList);
 
   const panelSchedule = Object.assign(document.createElement("div"), {
-    className: "ics-panel",
+    className: styles.panel,
     id: "ics-tab-schedule",
   });
+  panelSchedule.dataset.role = "tab-panel";
   panelSchedule.setAttribute("role", "tabpanel");
-  panelSchedule.setAttribute("aria-labelledby", "tab-schedule");
+  panelSchedule.setAttribute("aria-labelledby", "ics-tab-btn-schedule");
 
   const rowDur = document.createElement("div");
-  rowDur.className = "ics-row";
+  rowDur.className = styles.row;
   const lblDur = Object.assign(document.createElement("div"), {
-    className: "ics-label",
+    className: styles.label,
     textContent: "每节课时长（分钟）",
   });
   const durInp = Object.assign(document.createElement("input"), {
     type: "number",
     id: "ics-duration",
-    className: "ics-field",
+    className: styles.field,
     min: "1",
     max: "240",
     value: String(cfg.duration),
   });
   const tipDur = Object.assign(document.createElement("div"), {
-    className: "ics-tip",
+    className: styles.tip,
     textContent: "结束时间 = 开始时间 + 时长，课间休息不需要单独填写",
   });
   rowDur.append(lblDur, durInp, tipDur);
 
   const scheduleHd = Object.assign(document.createElement("div"), {
-    className: "ics-section-hd",
+    className: styles.sectionHeading,
     textContent: "各节次开始时间",
   });
 
   const periodTbl = document.createElement("table");
-  periodTbl.className = "ics-tbl";
-  periodTbl.innerHTML = `<thead><tr><th>节</th><th>开始</th><th>结束</th><th></th></tr></thead>`;
+  periodTbl.className = styles.table;
+  periodTbl.appendChild(createTableHead(["节", "开始", "结束", ""]));
   const periodTb = document.createElement("tbody");
   periodTb.id = "ics-period-tbody";
   cfg.periods.forEach((period, index) =>
@@ -199,12 +271,11 @@ export function createDialogElements(
   const addPeriodBtn = Object.assign(document.createElement("button"), {
     type: "button",
     id: "ics-add-period-btn",
-    className: "ics-add-btn",
+    className: styles.addButton,
     textContent: "＋ 添加节次",
   });
   const tipSchedule = Object.assign(document.createElement("div"), {
-    className: "ics-tip",
-    style: "margin-top:8px",
+    className: cx(styles.tip, styles.scheduleTip),
     textContent: "配置自动保存，刷新页面后仍然有效",
   });
   panelSchedule.append(
@@ -216,25 +287,21 @@ export function createDialogElements(
   );
 
   const panelAlarm = Object.assign(document.createElement("div"), {
-    className: "ics-panel",
+    className: styles.panel,
     id: "ics-tab-alarm",
   });
+  panelAlarm.dataset.role = "tab-panel";
   panelAlarm.setAttribute("role", "tabpanel");
-  panelAlarm.setAttribute("aria-labelledby", "tab-alarm");
+  panelAlarm.setAttribute("aria-labelledby", "ics-tab-btn-alarm");
 
   const alarmTip = Object.assign(document.createElement("div"), {
-    className: "ics-tip",
+    className: cx(styles.tip, styles.alarmTip),
   });
-  alarmTip.style.marginBottom = "12px";
-  alarmTip.innerHTML =
-    `每条规则在每个日历事件中写入一个 <code>VALARM</code>，可叠加多条。<br>` +
-    `<b>静默通知</b>：仅弹通知横幅，不响铃（<i>推荐</i>）。<br>` +
-    `<b>响铃提醒</b>：播放系统提示音（Apple Calendar / Outlook 支持）。<br>` +
-    `全部关闭 = 不写入任何提醒。`;
+  alarmTip.appendChild(createAlarmTipContent());
 
   const alarmTbl = document.createElement("table");
-  alarmTbl.className = "ics-tbl";
-  alarmTbl.innerHTML = `<thead><tr><th>开启</th><th>提前时间</th><th>提醒方式</th><th></th></tr></thead>`;
+  alarmTbl.className = styles.table;
+  alarmTbl.appendChild(createTableHead(["开启", "提前时间", "提醒方式", ""]));
   const alarmTb = document.createElement("tbody");
   alarmTb.id = "ics-alarm-tbody";
   cfg.alarms.forEach((alarm, index) =>
@@ -245,7 +312,7 @@ export function createDialogElements(
   const addAlarmBtn = Object.assign(document.createElement("button"), {
     type: "button",
     id: "ics-add-alarm-btn",
-    className: "ics-add-btn",
+    className: styles.addButton,
     textContent: "＋ 添加提醒规则",
   });
   panelAlarm.append(alarmTip, alarmTbl, addAlarmBtn);
@@ -253,15 +320,16 @@ export function createDialogElements(
   panelsEl.append(panelExport, panelSchedule, panelAlarm);
 
   const footer = document.createElement("div");
-  footer.className = "ics-footer";
+  footer.className = styles.footer;
   const exportBtn = Object.assign(document.createElement("button"), {
     type: "button",
     id: "ics-export-btn",
+    className: styles.exportButton,
     textContent: "⬇ 导出 .ics",
   });
   const statusEl = Object.assign(document.createElement("div"), {
     id: "ics-status",
-    className: "ics-inf",
+    className: cx(styles.status, styles.statusInfo),
   });
   statusEl.setAttribute("aria-live", "polite");
   footer.append(exportBtn, statusEl);

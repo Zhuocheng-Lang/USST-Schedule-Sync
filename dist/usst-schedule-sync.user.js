@@ -15,6 +15,7 @@
 // @downloadURL        https://github.com/Zhuocheng-Lang/USST-Schedule-Sync/blob/main/dist/usst-schedule-sync.user.js
 // @updateURL          https://github.com/Zhuocheng-Lang/USST-Schedule-Sync/blob/main/dist/usst-schedule-sync.user.js
 // @match              *://jwgl.usst.edu.cn/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html*
+// @grant              GM_addStyle
 // @grant              GM_getValue
 // @grant              GM_setValue
 // @run-at             document-idle
@@ -22,7 +23,24 @@
 // ==/UserScript==
 
 (function () {
-  'use strict';
+  "use strict";
+
+  const d = new Set();
+  const o = async (e) => {
+    d.has(e) ||
+      (d.add(e),
+      ((t) => {
+        typeof GM_addStyle == "function"
+          ? GM_addStyle(t)
+          : (document.head || document.documentElement)
+              .appendChild(document.createElement("style"))
+              .append(t);
+      })(e));
+  };
+
+  o(
+    ' ._backdrop_13k50_1{display:none;position:fixed;inset:0;z-index:99998;background:#0a122380;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}._backdrop_13k50_1._dialogOpen_13k50_19{display:block;animation:_backdropIn_13k50_1 .2s ease forwards}@keyframes _backdropIn_13k50_1{0%{opacity:0}to{opacity:1}}._dialog_13k50_19{display:none;position:fixed;z-index:99999;top:50%;left:50%;transform:translate(-50%,-50%);width:480px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);background:#fff;border-radius:16px;box-shadow:0 24px 64px #0a122338,0 4px 16px #0a122314;font-family:-apple-system,PingFang SC,Microsoft YaHei,sans-serif;font-size:13px;color:#1a1a2e;flex-direction:column}._dialog_13k50_19._dialogOpen_13k50_19{display:flex;animation:_dialogIn_13k50_1 .22s cubic-bezier(.34,1.36,.64,1) forwards}@keyframes _dialogIn_13k50_1{0%{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}._header_13k50_121{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 0;flex-shrink:0}._headerTitle_13k50_137{display:flex;align-items:center;gap:10px}._logo_13k50_149{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#1a73e8,#0d47a1);display:flex;align-items:center;justify-content:center;font-size:18px}._titleText_13k50_173{font-size:15px;font-weight:700;line-height:1.2}._titleSub_13k50_185{font-size:11px;color:#9aa0ad;margin-top:2px}._closeButton_13k50_197{width:30px;height:30px;border-radius:50%;border:none;flex-shrink:0;background:#f0f2f5;color:#666;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}._closeButton_13k50_197:hover{background:#e0e4ea;color:#222}._closeButton_13k50_197:focus-visible{outline:2px solid #1a73e8;outline-offset:2px}._tabs_13k50_249{display:flex;margin:14px 22px 0;flex-shrink:0;border-bottom:2px solid #f0f2f5}._tabButton_13k50_263{padding:8px 16px;border:none;background:none;font-size:13px;font-weight:600;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}._tabButton_13k50_263._active_13k50_289{color:#1a73e8;border-bottom-color:#1a73e8}._tabButton_13k50_263:hover:not(._active_13k50_289){color:#444}._tabButton_13k50_263:focus-visible{outline:2px solid #1a73e8;outline-offset:-2px}._panels_13k50_317{overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0;max-height:54vh;padding:18px 22px;overscroll-behavior:contain}._panel_13k50_317{display:none}._panel_13k50_317._active_13k50_289{display:block}._row_13k50_353{margin-bottom:14px}._row_13k50_353:last-child{margin-bottom:0}._label_13k50_369{display:flex;align-items:center;gap:5px;margin-bottom:6px;font-weight:600;color:#444;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}._required_13k50_393{color:#e74c3c}._field_13k50_401{width:100%;padding:8px 11px;box-sizing:border-box;border:1.5px solid #dde1e9;border-radius:8px;font-size:13px;color:#222;outline:none;background:#fafbfc;transition:border-color .15s,background .15s;font-family:inherit}._field_13k50_401:focus{border-color:#1a73e8;background:#fff}._tip_13k50_439{font-size:11.5px;color:#9aa0ad;margin-top:5px;line-height:1.55}._scheduleTip_13k50_453{margin-top:8px}._alarmTip_13k50_461{margin-bottom:12px}._twoColumn_13k50_469{display:grid;grid-template-columns:1fr 1fr;gap:12px}._sectionHeading_13k50_481{font-size:11px;font-weight:700;color:#9aa0ad;text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid #f0f2f5}._sectionHeading_13k50_481:first-child{margin-top:0}._table_13k50_511{width:100%;border-collapse:collapse;font-size:12px}._table_13k50_511 th{text-align:left;font-weight:700;color:#9aa0ad;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;padding:0 6px 7px;border-bottom:1px solid #eef0f4}._table_13k50_511 td{padding:4px 3px;vertical-align:middle}._cellNo_13k50_555{color:#c8cdd8;width:22px;text-align:center;font-size:11px}._cellEnd_13k50_569{color:#c0c8d5;font-size:11.5px;padding-left:5px!important;white-space:nowrap}._toggleCell_13k50_583{width:36px;text-align:center}._timeInput_13k50_593,._miniNumber_13k50_595,._miniSelect_13k50_597{padding:5px 7px;font-size:12px;font-family:inherit;border:1.5px solid #dde1e9;border-radius:6px;outline:none;background:#fafbfc;box-sizing:border-box;transition:border-color .15s}._timeInput_13k50_593:focus,._miniNumber_13k50_595:focus,._miniSelect_13k50_597:focus{border-color:#1a73e8}._timeInput_13k50_593{width:90px;text-align:center}._miniNumber_13k50_595{width:54px;text-align:center}._miniSelect_13k50_597{cursor:pointer}._deleteButton_13k50_661{background:none;border:none;color:#d0d5de;cursor:pointer;font-size:17px;line-height:1;padding:2px 5px;border-radius:5px;transition:color .15s}._deleteButton_13k50_661:hover{color:#e74c3c}._deleteButton_13k50_661:focus-visible{outline:2px solid #e74c3c;outline-offset:2px}._addButton_13k50_703{margin-top:9px;width:100%;padding:7px;border:1.5px dashed #c8cdd8;border-radius:8px;background:none;color:#9aa0ad;font-size:12px;cursor:pointer;font-family:inherit;transition:border-color .15s,color .15s}._addButton_13k50_703:hover{border-color:#1a73e8;color:#1a73e8}._addButton_13k50_703:focus-visible{outline:2px solid #1a73e8;outline-offset:2px}._toggle_13k50_583{position:relative;display:inline-block;width:32px;height:18px}._toggle_13k50_583 input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}._toggleTrack_13k50_783{position:absolute;inset:0;pointer-events:none;background:#d0d5de;border-radius:18px;transition:background .2s}._toggleTrack_13k50_783:before{content:"";position:absolute;width:12px;height:12px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px #00000026}._toggle_13k50_583 input:checked~._toggleTrack_13k50_783{background:#1a73e8}._toggle_13k50_583 input:checked~._toggleTrack_13k50_783:before{transform:translate(14px)}._toggle_13k50_583 input:focus-visible~._toggleTrack_13k50_783{outline:2px solid #1a73e8;outline-offset:2px}._alarmRow_13k50_853._alarmOff_13k50_853 td:not(._toggleCell_13k50_583){opacity:.32;pointer-events:none}._preview_13k50_863{margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,1fr)}._preview_13k50_863 li{list-style:none;display:flex;gap:6px;align-items:baseline;font-size:12px;line-height:1.9}._previewIndex_13k50_895{color:#c0c8d5;width:16px;text-align:right;flex-shrink:0;font-size:11px}._previewTime_13k50_911{color:#222;font-variant-numeric:tabular-nums}._previewEnd_13k50_921{color:#c0c8d5;font-size:11.5px}._footer_13k50_931{padding:14px 22px 18px;border-top:1px solid #f0f2f5;display:flex;align-items:center;gap:12px;flex-shrink:0}._exportButton_13k50_949{flex:0 0 auto;padding:10px 22px;background:linear-gradient(135deg,#1a73e8,#0d5bba);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;font-family:inherit;box-shadow:0 3px 10px #1a73e84d;transition:opacity .15s,box-shadow .15s}._exportButton_13k50_949:hover{opacity:.9;box-shadow:0 5px 16px #1a73e86b}._exportButton_13k50_949:focus-visible{outline:2px solid #fff;outline-offset:-4px}._status_13k50_1001{flex:1;font-size:12px;min-height:16px;line-height:1.5;word-break:break-word}._statusOk_13k50_1017{color:#166534}._statusError_13k50_1025{color:#991b1b}._statusInfo_13k50_1033{color:#64748b} ',
+  );
 
   const DEFAULT_PERIODS = [
     { start: "08:00" },
@@ -36,18 +54,16 @@
     { start: "15:55" },
     { start: "18:00" },
     { start: "18:50" },
-    { start: "19:40" }
+    { start: "19:40" },
   ];
   const DEFAULT_DURATION = 45;
-  const DEFAULT_ALARMS = [
-    { enabled: true, minutes: 15, action: "DISPLAY" }
-  ];
+  const DEFAULT_ALARMS = [{ enabled: true, minutes: 15, action: "DISPLAY" }];
   const STORAGE_NAMESPACE = "ics_";
   function defaultConfig() {
     return {
       duration: DEFAULT_DURATION,
       periods: DEFAULT_PERIODS.map((period) => ({ ...period })),
-      alarms: DEFAULT_ALARMS.map((alarm) => ({ ...alarm }))
+      alarms: DEFAULT_ALARMS.map((alarm) => ({ ...alarm })),
     };
   }
   function storageGet(key, fallback) {
@@ -85,13 +101,15 @@
     const [hours, minutes] = hhmm.split(":").map(Number);
     const total = Math.min(
       (hours ?? 0) * 60 + (minutes ?? 0) + mins,
-      23 * 60 + 59
+      23 * 60 + 59,
     );
     return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
   }
   function getPeriodTime(periods, duration, no) {
     const period = periods[no - 1];
-    return period ? { start: period.start, end: addMinutes(period.start, duration) } : null;
+    return period
+      ? { start: period.start, end: addMinutes(period.start, duration) }
+      : null;
   }
   function semesterDate(firstMonday, weekNo, dow) {
     const [year, month, day] = firstMonday.split("-").map(Number);
@@ -100,14 +118,18 @@
     return [
       base.getFullYear(),
       String(base.getMonth() + 1).padStart(2, "0"),
-      String(base.getDate()).padStart(2, "0")
+      String(base.getDate()).padStart(2, "0"),
     ].join("-");
   }
   function toICSDateTime(dateISO, hhmm) {
     return dateISO.replace(/-/g, "") + "T" + hhmm.replace(":", "") + "00";
   }
   function escapeICSText(text) {
-    return String(text).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
+    return String(text)
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\r\n|\r|\n/g, "\\n");
   }
   function foldLine(line) {
     const encoder = new TextEncoder();
@@ -134,8 +156,8 @@
   }
   function uuidV4() {
     const bytes = crypto.getRandomValues(new Uint8Array(16));
-    bytes[6] = bytes[6] & 15 | 64;
-    bytes[8] = bytes[8] & 63 | 128;
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
     const hex = [...bytes].map((value) => value.toString(16).padStart(2, "0"));
     return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
   }
@@ -155,7 +177,11 @@
     const [, startWeek, endWeek, parity] = range;
     const weeks = [];
     for (let week = Number(startWeek); week <= Number(endWeek); week++) {
-      if (!parity || parity === "单" && week % 2 === 1 || parity === "双" && week % 2 === 0) {
+      if (
+        !parity ||
+        (parity === "单" && week % 2 === 1) ||
+        (parity === "双" && week % 2 === 0)
+      ) {
         weeks.push(week);
       }
     }
@@ -171,10 +197,11 @@
     "TZNAME:CST",
     "DTSTART:19700101T000000",
     "END:STANDARD",
-    "END:VTIMEZONE"
+    "END:VTIMEZONE",
   ].join("\r\n");
   function generateICS(courses, firstMonday, tzid, cfg) {
-    const dtstamp = ( new Date()).toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
+    const dtstamp =
+      new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
     const activeAlarms = cfg.alarms.filter((alarm) => alarm.enabled);
     const lines = [
       "BEGIN:VCALENDAR",
@@ -184,7 +211,7 @@
       "METHOD:PUBLISH",
       "X-WR-CALNAME:上理工课表",
       "X-WR-TIMEZONE:" + tzid,
-      "X-WR-CALDESC:由 USST 课表导出工具生成"
+      "X-WR-CALDESC:由 USST 课表导出工具生成",
     ];
     if (tzid === "Asia/Shanghai") {
       for (const line of VTIMEZONE_SHANGHAI.split("\r\n")) {
@@ -193,7 +220,11 @@
     }
     let eventCount = 0;
     for (const course of courses) {
-      const startPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pStart);
+      const startPeriod = getPeriodTime(
+        cfg.periods,
+        cfg.duration,
+        course.pStart,
+      );
       const endPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pEnd);
       if (!startPeriod || !endPeriod) {
         continue;
@@ -204,14 +235,16 @@
         lines.push(`UID:${uuidV4()}@usst.timetable`);
         lines.push(`DTSTAMP:${dtstamp}`);
         lines.push(
-          `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`
+          `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`,
         );
-        lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`);
+        lines.push(
+          `DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`,
+        );
         lines.push(`SUMMARY:${escapeICSText(course.name)}`);
         lines.push(`LOCATION:${escapeICSText(course.location)}`);
         lines.push(
           `DESCRIPTION:${escapeICSText(`教师：${course.teacher}
-第${week}周（${course.rawWeeks}）`)}`
+第${week}周（${course.rawWeeks}）`)}`,
         );
         for (const alarm of activeAlarms) {
           lines.push("BEGIN:VALARM");
@@ -219,7 +252,7 @@
           lines.push(`TRIGGER:-PT${alarm.minutes}M`);
           if (alarm.action === "DISPLAY") {
             lines.push(
-              `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`
+              `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`,
             );
           } else {
             lines.push("ATTACH;VALUE=URI:Basso");
@@ -246,10 +279,10 @@
       return true;
     });
   }
-  function extractFromList(table) {
+  function extractFromList(table2) {
     const courses = [];
     for (let dow = 1; dow <= 7; dow++) {
-      const tbody = table.querySelector(`tbody#xq_${dow}`);
+      const tbody = table2.querySelector(`tbody#xq_${dow}`);
       if (!tbody || tbody.style.display === "none") {
         continue;
       }
@@ -317,7 +350,11 @@
         if (!titleEl) {
           continue;
         }
-        const name = titleEl.textContent?.trim().replace(/[★○◆◇●]/g, "").trim() ?? "";
+        const name =
+          titleEl.textContent
+            ?.trim()
+            .replace(/[★○◆◇●]/g, "")
+            .trim() ?? "";
         if (!name) {
           continue;
         }
@@ -325,13 +362,18 @@
         const tchrEl = con.querySelector(".glyphicon-user");
         courses.push({
           name,
-          location: locEl ? locEl.parentElement?.textContent?.trim().replace(/\s+/g, " ") ?? "" : "",
-          teacher: tchrEl ? tchrEl.parentElement?.textContent?.trim() ?? "" : "",
+          location: locEl
+            ? (locEl.parentElement?.textContent?.trim().replace(/\s+/g, " ") ??
+              "")
+            : "",
+          teacher: tchrEl
+            ? (tchrEl.parentElement?.textContent?.trim() ?? "")
+            : "",
           dow,
           pStart,
           pEnd,
           weeks,
-          rawWeeks
+          rawWeeks,
         });
       }
     }
@@ -342,15 +384,21 @@
     if (!titleEl) {
       return null;
     }
-    const name = titleEl.textContent?.trim().replace(/[★○◆◇●]/g, "").trim() ?? "";
+    const name =
+      titleEl.textContent
+        ?.trim()
+        .replace(/[★○◆◇●]/g, "")
+        .trim() ?? "";
     if (!name) {
       return null;
     }
-    const pText = Array.from(con.querySelectorAll("p")).map((p) => p.textContent?.replace(/\s+/g, " ").trim() ?? "").join(" ");
+    const pText = Array.from(con.querySelectorAll("p"))
+      .map((p) => p.textContent?.replace(/\s+/g, " ").trim() ?? "")
+      .join(" ");
     let rawWeeks = "";
     let weeks = [];
     const labelledMatch = pText.match(
-      /周数[：:]\s*([^\s校区上下]+周[（(双单）)]*)/
+      /周数[：:]\s*([^\s校区上下]+周[（(双单）)]*)/,
     );
     if (labelledMatch) {
       rawWeeks = labelledMatch[1]?.trim() ?? "";
@@ -376,7 +424,7 @@
       pStart,
       pEnd,
       weeks,
-      rawWeeks
+      rawWeeks,
     };
   }
   function downloadICS(content, filename) {
@@ -385,7 +433,7 @@
     try {
       const anchor = Object.assign(document.createElement("a"), {
         href: url,
-        download: filename
+        download: filename,
       });
       anchor.style.display = "none";
       document.body.appendChild(anchor);
@@ -412,7 +460,9 @@
       return saved;
     }
     const [year, quarter] = key.split("-").map(Number);
-    return quarter === 1 ? nthMonday(year ?? 0, 8, 1) : nthMonday((year ?? 0) + 1, 1, 3);
+    return quarter === 1
+      ? nthMonday(year ?? 0, 8, 1)
+      : nthMonday((year ?? 0) + 1, 1, 3);
   }
   function nthMonday(targetYear, month0, nth) {
     const date = new Date(targetYear, month0, 1);
@@ -423,38 +473,139 @@
     return [
       date.getFullYear(),
       String(date.getMonth() + 1).padStart(2, "0"),
-      String(date.getDate()).padStart(2, "0")
+      String(date.getDate()).padStart(2, "0"),
     ].join("-");
+  }
+  const backdrop = "_backdrop_13k50_1";
+  const dialogOpen = "_dialogOpen_13k50_19";
+  const dialog = "_dialog_13k50_19";
+  const header = "_header_13k50_121";
+  const headerTitle = "_headerTitle_13k50_137";
+  const logo = "_logo_13k50_149";
+  const titleText = "_titleText_13k50_173";
+  const titleSub = "_titleSub_13k50_185";
+  const closeButton = "_closeButton_13k50_197";
+  const tabs = "_tabs_13k50_249";
+  const tabButton = "_tabButton_13k50_263";
+  const active = "_active_13k50_289";
+  const panels = "_panels_13k50_317";
+  const panel = "_panel_13k50_317";
+  const row = "_row_13k50_353";
+  const label = "_label_13k50_369";
+  const required = "_required_13k50_393";
+  const field = "_field_13k50_401";
+  const tip = "_tip_13k50_439";
+  const scheduleTip = "_scheduleTip_13k50_453";
+  const alarmTip = "_alarmTip_13k50_461";
+  const twoColumn = "_twoColumn_13k50_469";
+  const sectionHeading = "_sectionHeading_13k50_481";
+  const table = "_table_13k50_511";
+  const cellNo = "_cellNo_13k50_555";
+  const cellEnd = "_cellEnd_13k50_569";
+  const toggleCell = "_toggleCell_13k50_583";
+  const timeInput = "_timeInput_13k50_593";
+  const miniNumber = "_miniNumber_13k50_595";
+  const miniSelect = "_miniSelect_13k50_597";
+  const deleteButton = "_deleteButton_13k50_661";
+  const addButton = "_addButton_13k50_703";
+  const toggle = "_toggle_13k50_583";
+  const toggleTrack = "_toggleTrack_13k50_783";
+  const alarmRow = "_alarmRow_13k50_853";
+  const alarmOff = "_alarmOff_13k50_853";
+  const preview = "_preview_13k50_863";
+  const previewIndex = "_previewIndex_13k50_895";
+  const previewTime = "_previewTime_13k50_911";
+  const previewEnd = "_previewEnd_13k50_921";
+  const footer = "_footer_13k50_931";
+  const exportButton = "_exportButton_13k50_949";
+  const status = "_status_13k50_1001";
+  const statusOk = "_statusOk_13k50_1017";
+  const statusError = "_statusError_13k50_1025";
+  const statusInfo = "_statusInfo_13k50_1033";
+  const styles = {
+    backdrop,
+    dialogOpen,
+    dialog,
+    header,
+    headerTitle,
+    logo,
+    titleText,
+    titleSub,
+    closeButton,
+    tabs,
+    tabButton,
+    active,
+    panels,
+    panel,
+    row,
+    label,
+    required,
+    field,
+    tip,
+    scheduleTip,
+    alarmTip,
+    twoColumn,
+    sectionHeading,
+    table,
+    cellNo,
+    cellEnd,
+    toggleCell,
+    timeInput,
+    miniNumber,
+    miniSelect,
+    deleteButton,
+    addButton,
+    toggle,
+    toggleTrack,
+    alarmRow,
+    alarmOff,
+    preview,
+    previewIndex,
+    previewTime,
+    previewEnd,
+    footer,
+    exportButton,
+    status,
+    statusOk,
+    statusError,
+    statusInfo,
+  };
+  function cx(...tokens) {
+    return tokens.filter((token) => Boolean(token)).join(" ");
   }
   const ACTION_LABELS = {
     DISPLAY: "静默通知",
-    AUDIO: "响铃提醒"
+    AUDIO: "响铃提醒",
   };
   function makePeriodRow(index, start, duration) {
     const tr = document.createElement("tr");
     tr.dataset.idx = String(index);
     const tdNo = Object.assign(document.createElement("td"), {
-      className: "tc-no",
-      textContent: String(index + 1)
+      className: styles.cellNo,
+      textContent: String(index + 1),
     });
+    tdNo.dataset.cell = "period-index";
     const input = Object.assign(document.createElement("input"), {
       type: "time",
-      className: "ics-time-inp period-start",
+      className: styles.timeInput,
       step: "60",
-      value: start
+      value: start,
     });
+    input.dataset.role = "period-start";
     const tdInp = document.createElement("td");
     tdInp.appendChild(input);
     const tdEnd = Object.assign(document.createElement("td"), {
-      className: "tc-end",
-      textContent: "→ " + addMinutes(start, duration)
+      className: styles.cellEnd,
+      textContent: "→ " + addMinutes(start, duration),
     });
+    tdEnd.dataset.cell = "period-end";
     const delBtn = Object.assign(document.createElement("button"), {
       type: "button",
-      className: "ics-del-btn",
+      className: styles.deleteButton,
       title: "删除此节",
-      textContent: "×"
+      textContent: "×",
     });
+    delBtn.dataset.action = "delete-period";
     const tdDel = document.createElement("td");
     tdDel.appendChild(delBtn);
     tr.append(tdNo, tdInp, tdEnd, tdDel);
@@ -462,40 +613,43 @@
   }
   function makeAlarmRow(index, alarm) {
     const tr = document.createElement("tr");
-    tr.className = "alarm-row" + (alarm.enabled ? "" : " alarm-off");
+    tr.className = cx(styles.alarmRow, !alarm.enabled && styles.alarmOff);
     tr.dataset.alarmIdx = String(index);
-    const toggle = document.createElement("label");
-    toggle.className = "ics-toggle";
-    toggle.title = alarm.enabled ? "已启用" : "已禁用";
+    const toggle2 = document.createElement("label");
+    toggle2.className = styles.toggle;
+    toggle2.title = alarm.enabled ? "已启用" : "已禁用";
+    toggle2.dataset.role = "alarm-toggle";
     const chk = Object.assign(document.createElement("input"), {
       type: "checkbox",
-      className: "alarm-enabled",
-      checked: alarm.enabled
+      checked: alarm.enabled,
     });
+    chk.dataset.role = "alarm-enabled";
     const track = Object.assign(document.createElement("span"), {
-      className: "ics-toggle-track"
+      className: styles.toggleTrack,
     });
-    toggle.append(chk, track);
+    toggle2.append(chk, track);
     const tdToggle = Object.assign(document.createElement("td"), {
-      className: "tc-toggle"
+      className: styles.toggleCell,
     });
-    tdToggle.appendChild(toggle);
+    tdToggle.appendChild(toggle2);
     const numInp = Object.assign(document.createElement("input"), {
       type: "number",
-      className: "ics-mini-num alarm-minutes",
+      className: styles.miniNumber,
       min: "1",
       max: "1440",
-      value: String(alarm.minutes)
+      value: String(alarm.minutes),
     });
+    numInp.dataset.role = "alarm-minutes";
     const tdMin = document.createElement("td");
     tdMin.append(numInp, " 分钟前");
     const select = Object.assign(document.createElement("select"), {
-      className: "ics-mini-sel alarm-action"
+      className: styles.miniSelect,
     });
-    for (const [value, label] of Object.entries(ACTION_LABELS)) {
+    select.dataset.role = "alarm-action";
+    for (const [value, label2] of Object.entries(ACTION_LABELS)) {
       const option = Object.assign(document.createElement("option"), {
         value,
-        textContent: label
+        textContent: label2,
       });
       if (value === alarm.action) {
         option.selected = true;
@@ -506,317 +660,178 @@
     tdSel.appendChild(select);
     const delBtn = Object.assign(document.createElement("button"), {
       type: "button",
-      className: "ics-del-btn alarm-del-btn",
+      className: styles.deleteButton,
       title: "删除此规则",
-      textContent: "×"
+      textContent: "×",
     });
+    delBtn.dataset.action = "delete-alarm";
     const tdDel = document.createElement("td");
     tdDel.appendChild(delBtn);
     tr.append(tdToggle, tdMin, tdSel, tdDel);
     return tr;
   }
-  const CSS = `
-/* ── toolbar trigger button — styled by Bootstrap 3, no overrides needed ── */
-
-/* ── modal backdrop ─────────────────────────────────────────────────── */
-#ics-backdrop {
-display: none; position: fixed; inset: 0; z-index: 99998;
-background: rgba(10,18,35,.5); backdrop-filter: blur(3px);
-}
-#ics-backdrop.ics-open {
-display: block;
-animation: icsBackdropIn .2s ease forwards;
-}
-@keyframes icsBackdropIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* ── dialog ─────────────────────────────────────────────────────────── */
-#ics-dialog {
-display: none; position: fixed; z-index: 99999;
-top: 50%; left: 50%;
-transform: translate(-50%, -50%);
-width: 480px; max-width: calc(100vw - 32px); max-height: calc(100vh - 48px);
-background: #fff; border-radius: 16px;
-box-shadow: 0 24px 64px rgba(10,18,35,.22), 0 4px 16px rgba(10,18,35,.08);
-font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-font-size: 13px; color: #1a1a2e;
-flex-direction: column;
-}
-#ics-dialog.ics-open {
-display: flex;
-animation: icsDialogIn .22s cubic-bezier(.34,1.36,.64,1) forwards;
-}
-@keyframes icsDialogIn {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(.94); }
-    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-
-/* ── dialog sections ─────────────────────────────────────────────────── */
-.ics-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 22px 0; flex-shrink: 0;
-}
-.ics-header-title { display: flex; align-items: center; gap: 10px; }
-.ics-logo {
-    width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
-    background: linear-gradient(135deg, #1a73e8, #0d47a1);
-    display: flex; align-items: center; justify-content: center; font-size: 18px;
-}
-.ics-title-text { font-size: 15px; font-weight: 700; line-height: 1.2; }
-.ics-title-sub  { font-size: 11px; color: #9aa0ad; margin-top: 2px; }
-
-.ics-close-btn {
-    width: 30px; height: 30px; border-radius: 50%; border: none; flex-shrink: 0;
-    background: #f0f2f5; color: #666; cursor: pointer; font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    transition: background .15s, color .15s;
-}
-.ics-close-btn:hover { background: #e0e4ea; color: #222; }
-.ics-close-btn:focus-visible { outline: 2px solid #1a73e8; outline-offset: 2px; }
-
-/* ── tabs ───────────────────────────────────────────────────────────── */
-.ics-tabs {
-    display: flex; margin: 14px 22px 0; flex-shrink: 0;
-    border-bottom: 2px solid #f0f2f5;
-}
-.ics-tab-btn {
-    padding: 8px 16px; border: none; background: none;
-    font-size: 13px; font-weight: 600; color: #888; cursor: pointer;
-    border-bottom: 2px solid transparent; margin-bottom: -2px;
-    transition: color .15s, border-color .15s;
-}
-.ics-tab-btn.active          { color: #1a73e8; border-bottom-color: #1a73e8; }
-.ics-tab-btn:hover:not(.active) { color: #444; }
-.ics-tab-btn:focus-visible   { outline: 2px solid #1a73e8; outline-offset: -2px; }
-
-/* ── panels (scrollable body) ───────────────────────────────────────── */
-.ics-panels {
-    overflow-y: auto; overflow-x: hidden;
-    flex: 1 1 auto; min-height: 0;
-    max-height: 54vh;
-    padding: 18px 22px;
-    overscroll-behavior: contain;
-}
-.ics-panel { display: none; }
-.ics-panel.active { display: block; }
-
-/* ── form atoms ─────────────────────────────────────────────────────── */
-.ics-row { margin-bottom: 14px; }
-.ics-row:last-child { margin-bottom: 0; }
-
-.ics-label {
-    display: flex; align-items: center; gap: 5px;
-    margin-bottom: 6px; font-weight: 600; color: #444;
-    font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px;
-}
-.ics-req { color: #e74c3c; }
-
-.ics-field {
-    width: 100%; padding: 8px 11px; box-sizing: border-box;
-    border: 1.5px solid #dde1e9; border-radius: 8px;
-    font-size: 13px; color: #222; outline: none; background: #fafbfc;
-    transition: border-color .15s, background .15s;
-    font-family: inherit;
-}
-.ics-field:focus { border-color: #1a73e8; background: #fff; }
-
-.ics-tip { font-size: 11.5px; color: #9aa0ad; margin-top: 5px; line-height: 1.55; }
-
-/* ── export tab layout ──────────────────────────────────────────────── */
-.ics-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-.ics-section-hd {
-    font-size: 11px; font-weight: 700; color: #9aa0ad;
-    text-transform: uppercase; letter-spacing: .5px;
-    margin: 18px 0 8px; padding-bottom: 6px; border-bottom: 1px solid #f0f2f5;
-}
-.ics-section-hd:first-child { margin-top: 0; }
-
-/* ── period/alarm table ─────────────────────────────────────────────── */
-.ics-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-.ics-tbl th {
-    text-align: left; font-weight: 700; color: #9aa0ad;
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: .3px;
-    padding: 0 6px 7px; border-bottom: 1px solid #eef0f4;
-}
-.ics-tbl td { padding: 4px 3px; vertical-align: middle; }
-.tc-no   { color: #c8cdd8; width: 22px; text-align: center; font-size: 11px; }
-.tc-end  { color: #c0c8d5; font-size: 11.5px; padding-left: 5px !important; white-space: nowrap; }
-.tc-toggle { width: 36px; text-align: center; }
-
-.ics-time-inp, .ics-mini-num, .ics-mini-sel {
-    padding: 5px 7px; font-size: 12px; font-family: inherit;
-    border: 1.5px solid #dde1e9; border-radius: 6px; outline: none;
-    background: #fafbfc; box-sizing: border-box; transition: border-color .15s;
-}
-.ics-time-inp:focus, .ics-mini-num:focus, .ics-mini-sel:focus { border-color: #1a73e8; }
-.ics-time-inp  { width: 90px; text-align: center; }
-.ics-mini-num  { width: 54px; text-align: center; }
-.ics-mini-sel  { cursor: pointer; }
-
-.ics-del-btn {
-    background: none; border: none; color: #d0d5de; cursor: pointer;
-    font-size: 17px; line-height: 1; padding: 2px 5px; border-radius: 5px;
-    transition: color .15s;
-}
-.ics-del-btn:hover       { color: #e74c3c; }
-.ics-del-btn:focus-visible { outline: 2px solid #e74c3c; outline-offset: 2px; }
-
-.ics-add-btn {
-    margin-top: 9px; width: 100%; padding: 7px;
-    border: 1.5px dashed #c8cdd8; border-radius: 8px;
-    background: none; color: #9aa0ad; font-size: 12px; cursor: pointer;
-    font-family: inherit; transition: border-color .15s, color .15s;
-}
-.ics-add-btn:hover       { border-color: #1a73e8; color: #1a73e8; }
-.ics-add-btn:focus-visible { outline: 2px solid #1a73e8; outline-offset: 2px; }
-
-/* ── toggle switch ──────────────────────────────────────────────────── */
-.ics-toggle { position: relative; display: inline-block; width: 32px; height: 18px; }
-.ics-toggle input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
-.ics-toggle-track {
-    position: absolute; inset: 0; pointer-events: none;
-    background: #d0d5de; border-radius: 18px; transition: background .2s;
-}
-.ics-toggle-track::before {
-    content: ''; position: absolute;
-    width: 12px; height: 12px; left: 3px; bottom: 3px;
-    background: #fff; border-radius: 50%; transition: transform .2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,.15);
-}
-.ics-toggle input:checked ~ .ics-toggle-track              { background: #1a73e8; }
-.ics-toggle input:checked ~ .ics-toggle-track::before      { transform: translateX(14px); }
-.ics-toggle input:focus-visible ~ .ics-toggle-track        { outline: 2px solid #1a73e8; outline-offset: 2px; }
-
-tr.alarm-row.alarm-off td:not(.tc-toggle) { opacity: .32; pointer-events: none; }
-
-/* ── period preview grid ────────────────────────────────────────────── */
-.ics-preview { margin: 6px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); }
-.ics-preview li {
-    list-style: none; display: flex; gap: 6px; align-items: baseline;
-    font-size: 12px; line-height: 1.9;
-}
-.ics-preview .pn { color: #c0c8d5; width: 16px; text-align: right; flex-shrink: 0; font-size: 11px; }
-.ics-preview .pt { color: #222; font-variant-numeric: tabular-nums; }
-.ics-preview .pe { color: #c0c8d5; font-size: 11.5px; }
-
-/* ── dialog footer ──────────────────────────────────────────────────── */
-.ics-footer {
-    padding: 14px 22px 18px; border-top: 1px solid #f0f2f5;
-    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-}
-#ics-export-btn {
-flex: 0 0 auto; padding: 10px 22px;
-background: linear-gradient(135deg, #1a73e8, #0d5bba);
-color: #fff; border: none; border-radius: 9px;
-font-size: 14px; font-weight: 700; cursor: pointer; letter-spacing: .3px;
-font-family: inherit;
-box-shadow: 0 3px 10px rgba(26,115,232,.3);
-transition: opacity .15s, box-shadow .15s;
-}
-#ics-export-btn:hover       { opacity: .9; box-shadow: 0 5px 16px rgba(26,115,232,.42); }
-#ics-export-btn:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
-
-#ics-status {
-flex: 1; font-size: 12px; min-height: 16px; line-height: 1.5;
-word-break: break-word;
-}
-.ics-ok  { color: #166534; }
-.ics-err { color: #991b1b; }
-.ics-inf { color: #64748b; }
-`;
-  const CSS_BUTTON_ONLY = "";
+  function createTableHead(labels) {
+    const thead = document.createElement("thead");
+    const row2 = document.createElement("tr");
+    for (const label2 of labels) {
+      const th = document.createElement("th");
+      th.textContent = label2;
+      row2.appendChild(th);
+    }
+    thead.appendChild(row2);
+    return thead;
+  }
+  function createAlarmTipContent() {
+    const fragment = document.createDocumentFragment();
+    const code = document.createElement("code");
+    code.textContent = "VALARM";
+    fragment.append(
+      "每条规则在每个日历事件中写入一个 ",
+      code,
+      "，可叠加多条。",
+      document.createElement("br"),
+    );
+    const display = document.createElement("b");
+    display.textContent = "静默通知";
+    const recommended = document.createElement("i");
+    recommended.textContent = "推荐";
+    fragment.append(
+      display,
+      "：仅弹通知横幅，不响铃（",
+      recommended,
+      "）。",
+      document.createElement("br"),
+    );
+    const audio = document.createElement("b");
+    audio.textContent = "响铃提醒";
+    fragment.append(
+      audio,
+      "：播放系统提示音（Apple Calendar / Outlook 支持）。",
+      document.createElement("br"),
+    );
+    fragment.append("全部关闭 = 不写入任何提醒。");
+    return fragment;
+  }
   function createDialogElements(cfg, defaultDate) {
-    const styleEl = Object.assign(document.createElement("style"), {
-      textContent: CSS
+    const backdrop2 = Object.assign(document.createElement("div"), {
+      id: "ics-backdrop",
+      className: styles.backdrop,
     });
-    document.head.appendChild(styleEl);
-    const backdrop = Object.assign(document.createElement("div"), {
-      id: "ics-backdrop"
+    backdrop2.setAttribute("aria-hidden", "true");
+    document.body.appendChild(backdrop2);
+    const dialog2 = Object.assign(document.createElement("div"), {
+      id: "ics-dialog",
+      className: styles.dialog,
     });
-    backdrop.setAttribute("aria-hidden", "true");
-    document.body.appendChild(backdrop);
-    const dialog = Object.assign(document.createElement("div"), {
-      id: "ics-dialog"
+    dialog2.setAttribute("role", "dialog");
+    dialog2.setAttribute("aria-modal", "true");
+    dialog2.setAttribute("aria-labelledby", "ics-dialog-title");
+    dialog2.setAttribute("aria-hidden", "true");
+    const header2 = document.createElement("div");
+    header2.className = styles.header;
+    const headerTitle2 = document.createElement("div");
+    headerTitle2.className = styles.headerTitle;
+    const logo2 = Object.assign(document.createElement("div"), {
+      className: styles.logo,
+      textContent: "📅",
     });
-    dialog.setAttribute("role", "dialog");
-    dialog.setAttribute("aria-modal", "true");
-    dialog.setAttribute("aria-labelledby", "ics-dialog-title");
-    const header = document.createElement("div");
-    header.className = "ics-header";
-    header.innerHTML = `<div class="ics-header-title"><div class="ics-logo" aria-hidden="true">📅</div><div><div class="ics-title-text" id="ics-dialog-title">导出日历</div><div class="ics-title-sub">Export to .ics · iCalendar RFC 5545</div></div></div>`;
+    logo2.setAttribute("aria-hidden", "true");
+    const titleWrap = document.createElement("div");
+    const titleText2 = Object.assign(document.createElement("div"), {
+      id: "ics-dialog-title",
+      className: styles.titleText,
+      textContent: "导出日历",
+    });
+    const titleSub2 = Object.assign(document.createElement("div"), {
+      className: styles.titleSub,
+      textContent: "Export to .ics · iCalendar RFC 5545",
+    });
+    titleWrap.append(titleText2, titleSub2);
+    headerTitle2.append(logo2, titleWrap);
     const closeBtn = Object.assign(document.createElement("button"), {
       type: "button",
-      className: "ics-close-btn",
+      className: styles.closeButton,
       title: "关闭 (Esc)",
-      textContent: "✕"
+      textContent: "✕",
     });
-    header.appendChild(closeBtn);
+    closeBtn.setAttribute("aria-label", "关闭对话框");
+    header2.append(headerTitle2, closeBtn);
     const tabBar = document.createElement("div");
-    tabBar.className = "ics-tabs";
+    tabBar.className = styles.tabs;
     tabBar.setAttribute("role", "tablist");
     const tabDefs = [
       { id: "export", label: "导出设置" },
       { id: "schedule", label: "节次时间" },
-      { id: "alarm", label: "课前提醒" }
+      { id: "alarm", label: "课前提醒" },
     ];
-    for (const { id, label } of tabDefs) {
+    for (const { id, label: label2 } of tabDefs) {
+      const isActive = id === "export";
       const btn = Object.assign(document.createElement("button"), {
         type: "button",
-        className: "ics-tab-btn" + (id === "export" ? " active" : ""),
-        textContent: label
+        id: `ics-tab-btn-${id}`,
+        className: cx(styles.tabButton, isActive && styles.active),
+        textContent: label2,
       });
       btn.dataset.tab = id;
+      btn.dataset.role = "tab-button";
       btn.setAttribute("role", "tab");
-      btn.setAttribute("aria-selected", String(id === "export"));
+      btn.setAttribute("aria-selected", String(isActive));
       btn.setAttribute("aria-controls", `ics-tab-${id}`);
       tabBar.appendChild(btn);
     }
     const panelsEl = Object.assign(document.createElement("div"), {
-      className: "ics-panels"
+      className: styles.panels,
     });
     const panelExport = Object.assign(document.createElement("div"), {
-      className: "ics-panel active",
-      id: "ics-tab-export"
+      className: cx(styles.panel, styles.active),
+      id: "ics-tab-export",
     });
+    panelExport.dataset.role = "tab-panel";
     panelExport.setAttribute("role", "tabpanel");
-    panelExport.setAttribute("aria-labelledby", "tab-export");
+    panelExport.setAttribute("aria-labelledby", "ics-tab-btn-export");
     const twoCol = document.createElement("div");
-    twoCol.className = "ics-two-col";
+    twoCol.className = styles.twoColumn;
     const rowDate = document.createElement("div");
-    rowDate.className = "ics-row";
+    rowDate.className = styles.row;
     const lblDate = document.createElement("div");
-    lblDate.className = "ics-label";
-    lblDate.innerHTML = `学期第 1 周周一 <span class="ics-req" aria-label="必填">*</span>`;
+    lblDate.className = styles.label;
+    lblDate.append("学期第 1 周周一 ");
+    const req = Object.assign(document.createElement("span"), {
+      className: styles.required,
+      textContent: "*",
+    });
+    req.setAttribute("aria-label", "必填");
+    lblDate.appendChild(req);
     const startInp = Object.assign(document.createElement("input"), {
       type: "date",
       id: "ics-semester-start",
-      className: "ics-field",
-      value: defaultDate
+      className: styles.field,
+      value: defaultDate,
     });
     startInp.setAttribute("aria-required", "true");
     const tipDate = Object.assign(document.createElement("div"), {
-      className: "ics-tip",
-      textContent: "第一教学周的周一日期"
+      className: styles.tip,
+      textContent: "第一教学周的周一日期",
     });
     rowDate.append(lblDate, startInp, tipDate);
     const rowTz = document.createElement("div");
-    rowTz.className = "ics-row";
+    rowTz.className = styles.row;
     const lblTz = Object.assign(document.createElement("div"), {
-      className: "ics-label",
-      textContent: "时区"
+      className: styles.label,
+      textContent: "时区",
     });
     const tzSel = Object.assign(document.createElement("select"), {
       id: "ics-tzid",
-      className: "ics-field"
+      className: styles.field,
     });
-    for (const [value, label] of [
+    for (const [value, label2] of [
       ["Asia/Shanghai", "北京时间 (CST +8)"],
       ["Asia/Hong_Kong", "香港 (HKT +8)"],
-      ["Asia/Taipei", "台北 (CST +8)"]
+      ["Asia/Taipei", "台北 (CST +8)"],
     ]) {
       const option = Object.assign(document.createElement("option"), {
         value,
-        textContent: label
+        textContent: label2,
       });
       if (value === "Asia/Shanghai") {
         option.selected = true;
@@ -826,116 +841,117 @@ word-break: break-word;
     rowTz.append(lblTz, tzSel);
     twoCol.append(rowDate, rowTz);
     const previewHd = Object.assign(document.createElement("div"), {
-      className: "ics-section-hd",
-      textContent: "节次时间预览"
+      className: styles.sectionHeading,
+      textContent: "节次时间预览",
     });
     const previewList = Object.assign(document.createElement("ul"), {
-      className: "ics-preview",
-      id: "ics-preview-list"
+      className: styles.preview,
+      id: "ics-preview-list",
     });
     panelExport.append(twoCol, previewHd, previewList);
     const panelSchedule = Object.assign(document.createElement("div"), {
-      className: "ics-panel",
-      id: "ics-tab-schedule"
+      className: styles.panel,
+      id: "ics-tab-schedule",
     });
+    panelSchedule.dataset.role = "tab-panel";
     panelSchedule.setAttribute("role", "tabpanel");
-    panelSchedule.setAttribute("aria-labelledby", "tab-schedule");
+    panelSchedule.setAttribute("aria-labelledby", "ics-tab-btn-schedule");
     const rowDur = document.createElement("div");
-    rowDur.className = "ics-row";
+    rowDur.className = styles.row;
     const lblDur = Object.assign(document.createElement("div"), {
-      className: "ics-label",
-      textContent: "每节课时长（分钟）"
+      className: styles.label,
+      textContent: "每节课时长（分钟）",
     });
     const durInp = Object.assign(document.createElement("input"), {
       type: "number",
       id: "ics-duration",
-      className: "ics-field",
+      className: styles.field,
       min: "1",
       max: "240",
-      value: String(cfg.duration)
+      value: String(cfg.duration),
     });
     const tipDur = Object.assign(document.createElement("div"), {
-      className: "ics-tip",
-      textContent: "结束时间 = 开始时间 + 时长，课间休息不需要单独填写"
+      className: styles.tip,
+      textContent: "结束时间 = 开始时间 + 时长，课间休息不需要单独填写",
     });
     rowDur.append(lblDur, durInp, tipDur);
     const scheduleHd = Object.assign(document.createElement("div"), {
-      className: "ics-section-hd",
-      textContent: "各节次开始时间"
+      className: styles.sectionHeading,
+      textContent: "各节次开始时间",
     });
     const periodTbl = document.createElement("table");
-    periodTbl.className = "ics-tbl";
-    periodTbl.innerHTML = `<thead><tr><th>节</th><th>开始</th><th>结束</th><th></th></tr></thead>`;
+    periodTbl.className = styles.table;
+    periodTbl.appendChild(createTableHead(["节", "开始", "结束", ""]));
     const periodTb = document.createElement("tbody");
     periodTb.id = "ics-period-tbody";
-    cfg.periods.forEach(
-      (period, index) => periodTb.appendChild(makePeriodRow(index, period.start, cfg.duration))
+    cfg.periods.forEach((period, index) =>
+      periodTb.appendChild(makePeriodRow(index, period.start, cfg.duration)),
     );
     periodTbl.appendChild(periodTb);
     const addPeriodBtn = Object.assign(document.createElement("button"), {
       type: "button",
       id: "ics-add-period-btn",
-      className: "ics-add-btn",
-      textContent: "＋ 添加节次"
+      className: styles.addButton,
+      textContent: "＋ 添加节次",
     });
     const tipSchedule = Object.assign(document.createElement("div"), {
-      className: "ics-tip",
-      style: "margin-top:8px",
-      textContent: "配置自动保存，刷新页面后仍然有效"
+      className: cx(styles.tip, styles.scheduleTip),
+      textContent: "配置自动保存，刷新页面后仍然有效",
     });
     panelSchedule.append(
       rowDur,
       scheduleHd,
       periodTbl,
       addPeriodBtn,
-      tipSchedule
+      tipSchedule,
     );
     const panelAlarm = Object.assign(document.createElement("div"), {
-      className: "ics-panel",
-      id: "ics-tab-alarm"
+      className: styles.panel,
+      id: "ics-tab-alarm",
     });
+    panelAlarm.dataset.role = "tab-panel";
     panelAlarm.setAttribute("role", "tabpanel");
-    panelAlarm.setAttribute("aria-labelledby", "tab-alarm");
-    const alarmTip = Object.assign(document.createElement("div"), {
-      className: "ics-tip"
+    panelAlarm.setAttribute("aria-labelledby", "ics-tab-btn-alarm");
+    const alarmTip2 = Object.assign(document.createElement("div"), {
+      className: cx(styles.tip, styles.alarmTip),
     });
-    alarmTip.style.marginBottom = "12px";
-    alarmTip.innerHTML = `每条规则在每个日历事件中写入一个 <code>VALARM</code>，可叠加多条。<br><b>静默通知</b>：仅弹通知横幅，不响铃（<i>推荐</i>）。<br><b>响铃提醒</b>：播放系统提示音（Apple Calendar / Outlook 支持）。<br>全部关闭 = 不写入任何提醒。`;
+    alarmTip2.appendChild(createAlarmTipContent());
     const alarmTbl = document.createElement("table");
-    alarmTbl.className = "ics-tbl";
-    alarmTbl.innerHTML = `<thead><tr><th>开启</th><th>提前时间</th><th>提醒方式</th><th></th></tr></thead>`;
+    alarmTbl.className = styles.table;
+    alarmTbl.appendChild(createTableHead(["开启", "提前时间", "提醒方式", ""]));
     const alarmTb = document.createElement("tbody");
     alarmTb.id = "ics-alarm-tbody";
-    cfg.alarms.forEach(
-      (alarm, index) => alarmTb.appendChild(makeAlarmRow(index, alarm))
+    cfg.alarms.forEach((alarm, index) =>
+      alarmTb.appendChild(makeAlarmRow(index, alarm)),
     );
     alarmTbl.appendChild(alarmTb);
     const addAlarmBtn = Object.assign(document.createElement("button"), {
       type: "button",
       id: "ics-add-alarm-btn",
-      className: "ics-add-btn",
-      textContent: "＋ 添加提醒规则"
+      className: styles.addButton,
+      textContent: "＋ 添加提醒规则",
     });
-    panelAlarm.append(alarmTip, alarmTbl, addAlarmBtn);
+    panelAlarm.append(alarmTip2, alarmTbl, addAlarmBtn);
     panelsEl.append(panelExport, panelSchedule, panelAlarm);
-    const footer = document.createElement("div");
-    footer.className = "ics-footer";
+    const footer2 = document.createElement("div");
+    footer2.className = styles.footer;
     const exportBtn = Object.assign(document.createElement("button"), {
       type: "button",
       id: "ics-export-btn",
-      textContent: "⬇ 导出 .ics"
+      className: styles.exportButton,
+      textContent: "⬇ 导出 .ics",
     });
     const statusEl = Object.assign(document.createElement("div"), {
       id: "ics-status",
-      className: "ics-inf"
+      className: cx(styles.status, styles.statusInfo),
     });
     statusEl.setAttribute("aria-live", "polite");
-    footer.append(exportBtn, statusEl);
-    dialog.append(header, tabBar, panelsEl, footer);
-    document.body.appendChild(dialog);
+    footer2.append(exportBtn, statusEl);
+    dialog2.append(header2, tabBar, panelsEl, footer2);
+    document.body.appendChild(dialog2);
     return {
-      backdrop,
-      dialog,
+      backdrop: backdrop2,
+      dialog: dialog2,
       closeBtn,
       tabBar,
       panelsEl,
@@ -948,7 +964,7 @@ word-break: break-word;
       alarmTb,
       addAlarmBtn,
       exportBtn,
-      statusEl
+      statusEl,
     };
   }
   function handleExportAction({
@@ -956,12 +972,12 @@ word-break: break-word;
     startInp,
     tzSel,
     readConfig,
-    setStatus
+    setStatus,
   }) {
     const semStart = startInp.value;
     const tzid = tzSel.value;
     if (!semStart) {
-      setStatus("⚠️ 请填写学期开始日期", "ics-err");
+      setStatus("⚠️ 请填写学期开始日期", "error");
       startInp.focus();
       return;
     }
@@ -971,17 +987,17 @@ word-break: break-word;
       const dayNames = "日一二三四五六";
       setStatus(
         `⚠️ ${semStart} 是星期${dayNames[weekDay]}，请填写周一的日期`,
-        "ics-err"
+        "error",
       );
       startInp.focus();
       return;
     }
-    setStatus("解析课表中…", "ics-inf");
+    setStatus("解析课表中…", "info");
     setTimeout(() => {
       try {
         const courses = extractCourses();
         if (!courses.length) {
-          setStatus("⚠️ 未找到课程数据，请先点击「查询」加载课表", "ics-err");
+          setStatus("⚠️ 未找到课程数据，请先点击「查询」加载课表", "error");
           return;
         }
         const currentCfg = readConfig();
@@ -989,7 +1005,7 @@ word-break: break-word;
           courses,
           semStart,
           tzid,
-          currentCfg
+          currentCfg,
         );
         const filename = `上理工课表_${semStart}.ics`;
         downloadICS(ics, filename);
@@ -997,17 +1013,17 @@ word-break: break-word;
           saveSemStart(semKey, semStart);
         }
         const alarmCount = currentCfg.alarms.filter(
-          (alarm) => alarm.enabled
+          (alarm) => alarm.enabled,
         ).length;
         const alarmSummary = alarmCount ? `${alarmCount} 条提醒` : "无提醒";
         setStatus(
           `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,
-          "ics-ok"
+          "ok",
         );
       } catch (error) {
         setStatus(
           `❌ 导出失败：${error instanceof Error ? error.message : String(error)}`,
-          "ics-err"
+          "error",
         );
         console.error("[ICS Exporter]", error);
       }
@@ -1016,40 +1032,43 @@ word-break: break-word;
   function readPeriodConfig(durInp, periodTb) {
     return {
       duration: Math.max(1, parseInt(durInp.value, 10) || DEFAULT_DURATION),
-      periods: Array.from(
-        periodTb.querySelectorAll("tr[data-idx]")
-      ).map((tr) => ({
-        start: tr.querySelector(".period-start")?.value ?? "08:00"
-      }))
+      periods: Array.from(periodTb.querySelectorAll("tr[data-idx]")).map(
+        (tr) => ({
+          start:
+            tr.querySelector('[data-role="period-start"]')?.value ?? "08:00",
+        }),
+      ),
     };
   }
   function readAlarms(alarmTb) {
-    return Array.from(
-      alarmTb.querySelectorAll("tr[data-alarm-idx]")
-    ).map((tr) => ({
-      enabled: tr.querySelector(".alarm-enabled")?.checked ?? false,
-      minutes: Math.max(
-        1,
-        parseInt(
-          tr.querySelector(".alarm-minutes")?.value ?? "15",
-          10
-        ) || 15
-      ),
-      action: tr.querySelector(".alarm-action")?.value ?? "DISPLAY"
-    }));
+    return Array.from(alarmTb.querySelectorAll("tr[data-alarm-idx]")).map(
+      (tr) => ({
+        enabled:
+          tr.querySelector('[data-role="alarm-enabled"]')?.checked ?? false,
+        minutes: Math.max(
+          1,
+          parseInt(
+            tr.querySelector('[data-role="alarm-minutes"]')?.value ?? "15",
+            10,
+          ) || 15,
+        ),
+        action:
+          tr.querySelector('[data-role="alarm-action"]')?.value ?? "DISPLAY",
+      }),
+    );
   }
   function readDialogConfig(durInp, periodTb, alarmTb) {
     return {
       ...readPeriodConfig(durInp, periodTb),
-      alarms: readAlarms(alarmTb)
+      alarms: readAlarms(alarmTb),
     };
   }
   function refreshPeriodTable(periodTb, duration) {
     periodTb.querySelectorAll("tr[data-idx]").forEach((tr, index) => {
       tr.dataset.idx = String(index);
-      const noEl = tr.querySelector(".tc-no");
-      const endEl = tr.querySelector(".tc-end");
-      const startEl = tr.querySelector(".period-start");
+      const noEl = tr.querySelector('[data-cell="period-index"]');
+      const endEl = tr.querySelector('[data-cell="period-end"]');
+      const startEl = tr.querySelector('[data-role="period-start"]');
       if (noEl) {
         noEl.textContent = String(index + 1);
       }
@@ -1062,17 +1081,30 @@ word-break: break-word;
     previewList.replaceChildren(
       ...periods.map((period, index) => {
         const li = document.createElement("li");
-        li.innerHTML = `<span class="pn">${index + 1}</span><span class="pt">${period.start}</span><span class="pe">→ ${addMinutes(period.start, duration)}</span>`;
+        const indexEl = Object.assign(document.createElement("span"), {
+          className: styles.previewIndex,
+          textContent: String(index + 1),
+        });
+        const startEl = Object.assign(document.createElement("span"), {
+          className: styles.previewTime,
+          textContent: period.start,
+        });
+        const endEl = Object.assign(document.createElement("span"), {
+          className: styles.previewEnd,
+          textContent: `→ ${addMinutes(period.start, duration)}`,
+        });
+        li.append(indexEl, startEl, endEl);
         return li;
-      })
+      }),
     );
   }
   function refreshAlarmRows(alarmTb) {
     alarmTb.querySelectorAll("tr[data-alarm-idx]").forEach((tr, index) => {
       tr.dataset.alarmIdx = String(index);
-      const enabled = tr.querySelector(".alarm-enabled")?.checked ?? false;
-      tr.classList.toggle("alarm-off", !enabled);
-      const toggleEl = tr.querySelector(".ics-toggle");
+      const enabled =
+        tr.querySelector('[data-role="alarm-enabled"]')?.checked ?? false;
+      tr.classList.toggle(styles.alarmOff, !enabled);
+      const toggleEl = tr.querySelector('[data-role="alarm-toggle"]');
       if (toggleEl) {
         toggleEl.title = enabled ? "已启用" : "已禁用";
       }
@@ -1084,10 +1116,11 @@ word-break: break-word;
     }
     const cfg = getConfig();
     const semKey = detectSemesterKey();
-    const defaultDate = guessSemesterStart(semKey) ?? `${( new Date()).getFullYear()}-02-17`;
+    const defaultDate =
+      guessSemesterStart(semKey) ?? `${new Date().getFullYear()}-02-17`;
     const {
-      backdrop,
-      dialog,
+      backdrop: backdrop2,
+      dialog: dialog2,
       closeBtn,
       tabBar,
       panelsEl,
@@ -1100,25 +1133,28 @@ word-break: break-word;
       alarmTb,
       addAlarmBtn,
       exportBtn,
-      statusEl
+      statusEl,
     } = createDialogElements(cfg, defaultDate);
     function openDialog2() {
-      backdrop.classList.add("ics-open");
-      dialog.classList.add("ics-open");
-      dialog.setAttribute("aria-hidden", "false");
+      backdrop2.classList.add(styles.dialogOpen);
+      dialog2.classList.add(styles.dialogOpen);
+      dialog2.setAttribute("aria-hidden", "false");
       refreshPreview(previewList, readPeriodCfg());
       requestAnimationFrame(() => startInp.focus());
     }
     function closeDialog() {
-      backdrop.classList.remove("ics-open");
-      dialog.classList.remove("ics-open");
-      dialog.setAttribute("aria-hidden", "true");
+      backdrop2.classList.remove(styles.dialogOpen);
+      dialog2.classList.remove(styles.dialogOpen);
+      dialog2.setAttribute("aria-hidden", "true");
       document.getElementById("ics-trigger-btn")?.focus();
     }
     closeBtn.addEventListener("click", closeDialog);
-    backdrop.addEventListener("click", closeDialog);
+    backdrop2.addEventListener("click", closeDialog);
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && dialog.classList.contains("ics-open")) {
+      if (
+        event.key === "Escape" &&
+        dialog2.classList.contains(styles.dialogOpen)
+      ) {
         event.preventDefault();
         closeDialog();
       }
@@ -1130,22 +1166,25 @@ word-break: break-word;
       fresh.addEventListener("click", openDialog2);
     }
     tabBar.addEventListener("click", (event) => {
-      const btn = event.target.closest(
-        ".ics-tab-btn"
-      );
+      const btn = event.target.closest('[data-role="tab-button"]');
       if (!btn) {
         return;
       }
       const tabId = btn.dataset.tab;
-      for (const tabButton of Array.from(
-        tabBar.querySelectorAll(".ics-tab-btn")
+      for (const tabButton2 of Array.from(
+        tabBar.querySelectorAll('[data-role="tab-button"]'),
       )) {
-        const active = tabButton.dataset.tab === tabId;
-        tabButton.classList.toggle("active", active);
-        tabButton.setAttribute("aria-selected", String(active));
+        const active2 = tabButton2.dataset.tab === tabId;
+        tabButton2.classList.toggle(styles.active, active2);
+        tabButton2.setAttribute("aria-selected", String(active2));
       }
-      for (const panel of Array.from(panelsEl.querySelectorAll(".ics-panel"))) {
-        panel.classList.toggle("active", panel.id === `ics-tab-${tabId}`);
+      for (const panel2 of Array.from(
+        panelsEl.querySelectorAll('[data-role="tab-panel"]'),
+      )) {
+        panel2.classList.toggle(
+          styles.active,
+          panel2.id === `ics-tab-${tabId}`,
+        );
       }
       if (tabId === "export") {
         refreshPreview(previewList, readPeriodCfg());
@@ -1165,15 +1204,18 @@ word-break: break-word;
       refreshAlarmRows(alarmTb);
       saveConfig(readCfg());
     }
-    refreshPreview(previewList, { periods: cfg.periods, duration: cfg.duration });
+    refreshPreview(previewList, {
+      periods: cfg.periods,
+      duration: cfg.duration,
+    });
     durInp.addEventListener("input", onPeriodChange);
     periodTb.addEventListener("input", (event) => {
-      if (event.target.classList.contains("period-start")) {
+      if (event.target.matches('[data-role="period-start"]')) {
         onPeriodChange();
       }
     });
     periodTb.addEventListener("click", (event) => {
-      const btn = event.target.closest(".ics-del-btn");
+      const btn = event.target.closest('[data-action="delete-period"]');
       if (!btn) {
         return;
       }
@@ -1192,17 +1234,20 @@ word-break: break-word;
     });
     alarmTb.addEventListener("change", (event) => {
       const target = event.target;
-      if (target.classList.contains("alarm-enabled") || target.classList.contains("alarm-action")) {
+      if (
+        target.matches('[data-role="alarm-enabled"]') ||
+        target.matches('[data-role="alarm-action"]')
+      ) {
         onAlarmChange();
       }
     });
     alarmTb.addEventListener("input", (event) => {
-      if (event.target.classList.contains("alarm-minutes")) {
+      if (event.target.matches('[data-role="alarm-minutes"]')) {
         onAlarmChange();
       }
     });
     alarmTb.addEventListener("click", (event) => {
-      const btn = event.target.closest(".alarm-del-btn");
+      const btn = event.target.closest('[data-action="delete-alarm"]');
       if (!btn) {
         return;
       }
@@ -1212,13 +1257,18 @@ word-break: break-word;
     addAlarmBtn.addEventListener("click", () => {
       const index = alarmTb.querySelectorAll("tr").length;
       alarmTb.appendChild(
-        makeAlarmRow(index, { enabled: true, minutes: 15, action: "DISPLAY" })
+        makeAlarmRow(index, { enabled: true, minutes: 15, action: "DISPLAY" }),
       );
       onAlarmChange();
     });
-    const setStatus = (message, className) => {
+    const statusClassNames = {
+      error: styles.statusError,
+      info: styles.statusInfo,
+      ok: styles.statusOk,
+    };
+    const setStatus = (message, tone) => {
       statusEl.textContent = message;
-      statusEl.className = className;
+      statusEl.className = cx(styles.status, statusClassNames[tone]);
     };
     exportBtn.addEventListener("click", () => {
       handleExportAction({
@@ -1226,7 +1276,7 @@ word-break: break-word;
         startInp,
         tzSel,
         readConfig: readCfg,
-        setStatus
+        setStatus,
       });
     });
   }
@@ -1246,7 +1296,8 @@ word-break: break-word;
     btn.appendChild(document.createTextNode(" 导出日历"));
     btn.addEventListener("click", onClick);
     const pdfBtn = document.getElementById("shcPDF");
-    const toolbar = document.getElementById("tb") ?? document.querySelector(".btn-toolbar");
+    const toolbar =
+      document.getElementById("tb") ?? document.querySelector(".btn-toolbar");
     if (pdfBtn) {
       pdfBtn.before(btn);
     } else if (toolbar) {
@@ -1257,20 +1308,20 @@ word-break: break-word;
     }
   }
   function isTimetableReady() {
-    return document.querySelector('#kblist_table tbody[id^="xq_"] .timetable_con') !== null || document.querySelector("#kbgrid_table_0 .timetable_con") !== null;
+    return (
+      document.querySelector(
+        '#kblist_table tbody[id^="xq_"] .timetable_con',
+      ) !== null ||
+      document.querySelector("#kbgrid_table_0 .timetable_con") !== null
+    );
   }
   function openDialog() {
-    document.getElementById("ics-backdrop")?.classList.add("ics-open");
-    document.getElementById("ics-dialog")?.classList.add("ics-open");
+    document.getElementById("ics-backdrop")?.classList.add(styles.dialogOpen);
+    const dialog2 = document.getElementById("ics-dialog");
+    dialog2?.classList.add(styles.dialogOpen);
+    dialog2?.setAttribute("aria-hidden", "false");
   }
   function earlyInjectButton() {
-    if (!document.getElementById("ics-btn-style")) {
-      const style = Object.assign(document.createElement("style"), {
-        id: "ics-btn-style",
-        textContent: CSS_BUTTON_ONLY
-      });
-      document.head.appendChild(style);
-    }
     injectTriggerButton(() => {
       if (!isTimetableReady()) {
         alert("请先点击「查询」按钮加载课表，再导出日历。");
@@ -1286,7 +1337,10 @@ word-break: break-word;
       return;
     }
     const observer = new MutationObserver(() => {
-      if (document.getElementById("tb") && !document.getElementById("ics-trigger-btn")) {
+      if (
+        document.getElementById("tb") &&
+        !document.getElementById("ics-trigger-btn")
+      ) {
         earlyInjectButton();
       }
       if (isTimetableReady()) {
@@ -1300,5 +1354,4 @@ word-break: break-word;
     }
   }
   init();
-
 })();

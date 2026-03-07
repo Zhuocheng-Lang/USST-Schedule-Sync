@@ -3,7 +3,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import { createUI } from "../ui/dialog";
-import { CSS_BUTTON_ONLY } from "../ui/css";
+import { styles } from "../ui/css";
 import { injectTriggerButton } from "../ui/toolbar";
 
 function isTimetableReady(): boolean {
@@ -14,19 +14,13 @@ function isTimetableReady(): boolean {
 }
 
 function openDialog(): void {
-  document.getElementById("ics-backdrop")?.classList.add("ics-open");
-  document.getElementById("ics-dialog")?.classList.add("ics-open");
+  document.getElementById("ics-backdrop")?.classList.add(styles.dialogOpen);
+  const dialog = document.getElementById("ics-dialog");
+  dialog?.classList.add(styles.dialogOpen);
+  dialog?.setAttribute("aria-hidden", "false");
 }
 
 function earlyInjectButton(): void {
-  if (!document.getElementById("ics-btn-style")) {
-    const style = Object.assign(document.createElement("style"), {
-      id: "ics-btn-style",
-      textContent: CSS_BUTTON_ONLY,
-    });
-    document.head.appendChild(style);
-  }
-
   injectTriggerButton(() => {
     if (!isTimetableReady()) {
       alert("请先点击「查询」按钮加载课表，再导出日历。");

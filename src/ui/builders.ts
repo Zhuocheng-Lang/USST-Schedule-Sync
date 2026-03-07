@@ -4,6 +4,7 @@
 
 import type { Alarm, AlarmAction } from "../types";
 import { addMinutes } from "../utils";
+import { cx, styles } from "./css";
 
 export const ACTION_LABELS: Record<AlarmAction, string> = {
   DISPLAY: "静默通知",
@@ -19,30 +20,34 @@ export function makePeriodRow(
   tr.dataset.idx = String(index);
 
   const tdNo = Object.assign(document.createElement("td"), {
-    className: "tc-no",
+    className: styles.cellNo,
     textContent: String(index + 1),
   });
+  tdNo.dataset.cell = "period-index";
 
   const input = Object.assign(document.createElement("input"), {
     type: "time",
-    className: "ics-time-inp period-start",
+    className: styles.timeInput,
     step: "60",
     value: start,
   });
+  input.dataset.role = "period-start";
   const tdInp = document.createElement("td");
   tdInp.appendChild(input);
 
   const tdEnd = Object.assign(document.createElement("td"), {
-    className: "tc-end",
+    className: styles.cellEnd,
     textContent: "→ " + addMinutes(start, duration),
   });
+  tdEnd.dataset.cell = "period-end";
 
   const delBtn = Object.assign(document.createElement("button"), {
     type: "button",
-    className: "ics-del-btn",
+    className: styles.deleteButton,
     title: "删除此节",
     textContent: "×",
   });
+  delBtn.dataset.action = "delete-period";
   const tdDel = document.createElement("td");
   tdDel.appendChild(delBtn);
 
@@ -52,41 +57,44 @@ export function makePeriodRow(
 
 export function makeAlarmRow(index: number, alarm: Alarm): HTMLTableRowElement {
   const tr = document.createElement("tr");
-  tr.className = "alarm-row" + (alarm.enabled ? "" : " alarm-off");
+  tr.className = cx(styles.alarmRow, !alarm.enabled && styles.alarmOff);
   tr.dataset.alarmIdx = String(index);
 
   const toggle = document.createElement("label");
-  toggle.className = "ics-toggle";
+  toggle.className = styles.toggle;
   toggle.title = alarm.enabled ? "已启用" : "已禁用";
+  toggle.dataset.role = "alarm-toggle";
 
   const chk = Object.assign(document.createElement("input"), {
     type: "checkbox",
-    className: "alarm-enabled",
     checked: alarm.enabled,
   });
+  chk.dataset.role = "alarm-enabled";
   const track = Object.assign(document.createElement("span"), {
-    className: "ics-toggle-track",
+    className: styles.toggleTrack,
   });
   toggle.append(chk, track);
 
   const tdToggle = Object.assign(document.createElement("td"), {
-    className: "tc-toggle",
+    className: styles.toggleCell,
   });
   tdToggle.appendChild(toggle);
 
   const numInp = Object.assign(document.createElement("input"), {
     type: "number",
-    className: "ics-mini-num alarm-minutes",
+    className: styles.miniNumber,
     min: "1",
     max: "1440",
     value: String(alarm.minutes),
   });
+  numInp.dataset.role = "alarm-minutes";
   const tdMin = document.createElement("td");
   tdMin.append(numInp, " 分钟前");
 
   const select = Object.assign(document.createElement("select"), {
-    className: "ics-mini-sel alarm-action",
+    className: styles.miniSelect,
   });
+  select.dataset.role = "alarm-action";
   for (const [value, label] of Object.entries(ACTION_LABELS)) {
     const option = Object.assign(document.createElement("option"), {
       value,
@@ -102,10 +110,11 @@ export function makeAlarmRow(index: number, alarm: Alarm): HTMLTableRowElement {
 
   const delBtn = Object.assign(document.createElement("button"), {
     type: "button",
-    className: "ics-del-btn alarm-del-btn",
+    className: styles.deleteButton,
     title: "删除此规则",
     textContent: "×",
   });
+  delBtn.dataset.action = "delete-alarm";
   const tdDel = document.createElement("td");
   tdDel.appendChild(delBtn);
 

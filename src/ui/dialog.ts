@@ -7,6 +7,7 @@ import { detectSemesterKey, guessSemesterStart } from "../core";
 import type { Config } from "../types";
 import { addMinutes } from "../utils";
 import { makeAlarmRow, makePeriodRow } from "./builders";
+import { cx, styles } from "./css";
 import { createDialogElements } from "./export-dialog/dom";
 import { handleExportAction } from "./export-dialog/export";
 import {
@@ -45,16 +46,16 @@ export function createUI(): void {
   } = createDialogElements(cfg, defaultDate);
 
   function openDialog(): void {
-    backdrop.classList.add("ics-open");
-    dialog.classList.add("ics-open");
+    backdrop.classList.add(styles.dialogOpen);
+    dialog.classList.add(styles.dialogOpen);
     dialog.setAttribute("aria-hidden", "false");
     refreshPreview(previewList, readPeriodCfg());
     requestAnimationFrame(() => startInp.focus());
   }
 
   function closeDialog(): void {
-    backdrop.classList.remove("ics-open");
-    dialog.classList.remove("ics-open");
+    backdrop.classList.remove(styles.dialogOpen);
+    dialog.classList.remove(styles.dialogOpen);
     dialog.setAttribute("aria-hidden", "true");
     (document.getElementById("ics-trigger-btn") as HTMLElement | null)?.focus();
   }
@@ -62,7 +63,10 @@ export function createUI(): void {
   closeBtn.addEventListener("click", closeDialog);
   backdrop.addEventListener("click", closeDialog);
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && dialog.classList.contains("ics-open")) {
+    if (
+      event.key === "Escape" &&
+      dialog.classList.contains(styles.dialogOpen)
+    ) {
       event.preventDefault();
       closeDialog();
     }
@@ -77,7 +81,7 @@ export function createUI(): void {
 
   tabBar.addEventListener("click", (event) => {
     const btn = (event.target as Element).closest(
-      ".ics-tab-btn",
+      '[data-role="tab-button"]',
     ) as HTMLElement | null;
     if (!btn) {
       return;
@@ -85,14 +89,16 @@ export function createUI(): void {
     const tabId = btn.dataset.tab;
 
     for (const tabButton of Array.from(
-      tabBar.querySelectorAll<HTMLElement>(".ics-tab-btn"),
+      tabBar.querySelectorAll<HTMLElement>('[data-role="tab-button"]'),
     )) {
       const active = tabButton.dataset.tab === tabId;
-      tabButton.classList.toggle("active", active);
+      tabButton.classList.toggle(styles.active, active);
       tabButton.setAttribute("aria-selected", String(active));
     }
-    for (const panel of Array.from(panelsEl.querySelectorAll(".ics-panel"))) {
-      panel.classList.toggle("active", panel.id === `ics-tab-${tabId}`);
+    for (const panel of Array.from(
+      panelsEl.querySelectorAll<HTMLElement>('[data-role="tab-panel"]'),
+    )) {
+      panel.classList.toggle(styles.active, panel.id === `ics-tab-${tabId}`);
     }
     if (tabId === "export") {
       refreshPreview(previewList, readPeriodCfg());
@@ -122,12 +128,14 @@ export function createUI(): void {
   durInp.addEventListener("input", onPeriodChange);
 
   periodTb.addEventListener("input", (event) => {
-    if ((event.target as Element).classList.contains("period-start")) {
+    if ((event.target as Element).matches('[data-role="period-start"]')) {
       onPeriodChange();
     }
   });
   periodTb.addEventListener("click", (event) => {
-    const btn = (event.target as Element).closest(".ics-del-btn");
+    const btn = (event.target as Element).closest(
+      '[data-action="delete-period"]',
+    );
     if (!btn) {
       return;
     }
@@ -148,19 +156,21 @@ export function createUI(): void {
   alarmTb.addEventListener("change", (event) => {
     const target = event.target as Element;
     if (
-      target.classList.contains("alarm-enabled") ||
-      target.classList.contains("alarm-action")
+      target.matches('[data-role="alarm-enabled"]') ||
+      target.matches('[data-role="alarm-action"]')
     ) {
       onAlarmChange();
     }
   });
   alarmTb.addEventListener("input", (event) => {
-    if ((event.target as Element).classList.contains("alarm-minutes")) {
+    if ((event.target as Element).matches('[data-role="alarm-minutes"]')) {
       onAlarmChange();
     }
   });
   alarmTb.addEventListener("click", (event) => {
-    const btn = (event.target as Element).closest(".alarm-del-btn");
+    const btn = (event.target as Element).closest(
+      '[data-action="delete-alarm"]',
+    );
     if (!btn) {
       return;
     }
@@ -175,9 +185,18 @@ export function createUI(): void {
     onAlarmChange();
   });
 
-  const setStatus = (message: string, className: string): void => {
+  const statusClassNames = {
+    error: styles.statusError,
+    info: styles.statusInfo,
+    ok: styles.statusOk,
+  } as const;
+
+  const setStatus = (
+    message: string,
+    tone: keyof typeof statusClassNames,
+  ): void => {
     statusEl.textContent = message;
-    statusEl.className = className;
+    statusEl.className = cx(styles.status, statusClassNames[tone]);
   };
 
   exportBtn.addEventListener("click", () => {
