@@ -1,27 +1,65 @@
-import type { Alarm, AlarmAction, Config, Period } from "../types";
+import { stableUid } from "../utils";
+import type {
+  Config,
+  Period,
+  ReminderDeliveryKind,
+  ReminderProgram,
+  ReminderRule,
+} from "../types";
 
 export const DEFAULT_PERIOD_START = "08:00";
-export const DEFAULT_ALARM_MINUTES = 15;
-export const DEFAULT_ALARM_ACTION: AlarmAction = "DISPLAY";
+export const DEFAULT_REMINDER_LEAD_MINUTES = 15;
+export const DEFAULT_REMINDER_DELIVERY_KIND: ReminderDeliveryKind = "DISPLAY";
 
-export const ALARM_ACTION_LABELS: Record<AlarmAction, string> = {
+export const REMINDER_DELIVERY_LABELS: Record<ReminderDeliveryKind, string> = {
   DISPLAY: "静默通知",
   AUDIO: "响铃提醒",
 };
+
+interface ReminderRuleDraft {
+  id?: unknown;
+  isEnabled?: unknown;
+  offset?: {
+    minutesBeforeStart?: unknown;
+  } | null;
+  delivery?: {
+    kind?: unknown;
+  } | null;
+  template?: {
+    kind?: unknown;
+  } | null;
+}
 
 export function clonePeriod(period: Period): Period {
   return { ...period };
 }
 
-export function cloneAlarm(alarm: Alarm): Alarm {
-  return { ...alarm };
+export function createReminderRuleId(seed = `${Date.now()}-${Math.random()}`): string {
+  return stableUid(seed, "usst.reminder");
+}
+
+export function cloneReminderRule(rule: ReminderRule): ReminderRule {
+  return {
+    id: rule.id,
+    isEnabled: rule.isEnabled,
+    offset: { ...rule.offset },
+    delivery: { ...rule.delivery },
+    template: { ...rule.template },
+  };
+}
+
+export function cloneReminderProgram(program: ReminderProgram): ReminderProgram {
+  return {
+    version: 2,
+    rules: program.rules.map(cloneReminderRule),
+  };
 }
 
 export function cloneConfig(config: Config): Config {
   return {
     duration: config.duration,
     periods: config.periods.map(clonePeriod),
-    alarms: config.alarms.map(cloneAlarm),
+    reminderProgram: cloneReminderProgram(config.reminderProgram),
   };
 }
 
@@ -58,23 +96,61 @@ export function normalizePeriods(
   );
 }
 
-export function normalizeAlarm(
-  alarm: Partial<Alarm> | null | undefined,
-): Alarm {
+export function createReminderRule(
+  draft: ReminderRuleDraft = {},
+): ReminderRule {
+  const deliveryKind =
+    draft.delivery?.kind === "AUDIO" ? "AUDIO" : DEFAULT_REMINDER_DELIVERY_KIND;
+
   return {
-    enabled: alarm?.enabled ?? true,
-    minutes: normalizeDuration(alarm?.minutes, DEFAULT_ALARM_MINUTES),
-    action: alarm?.action === "AUDIO" ? "AUDIO" : DEFAULT_ALARM_ACTION,
+    id:
+      typeof draft.id === "string" && draft.id.trim()
+        ? draft.id.trim()
+        : createReminderRuleId(),
+    isEnabled: draft.isEnabled !== false,
+    offset: {
+      minutesBeforeStart: normalizeDuration(
+        draft.offset?.minutesBeforeStart as number | string | null | undefined,
+        DEFAULT_REMINDER_LEAD_MINUTES,
+      ),
+    },
+    delivery: {
+      kind: deliveryKind,
+    },
+    template: {
+      kind:
+        draft.template?.kind === "course-start-countdown"
+          ? "course-start-countdown"
+          : "course-start-countdown",
+    },
   };
 }
 
-export function normalizeAlarms(
-  alarms: Partial<Alarm>[] | null | undefined,
-  fallbackAlarms: Alarm[],
-): Alarm[] {
-  if (!Array.isArray(alarms)) {
-    return fallbackAlarms.map(cloneAlarm);
+export function normalizeReminderProgram(
+  program: Partial<ReminderProgram> | null | undefined,
+  fallbackProgram: ReminderProgram,
+): ReminderProgram {
+  if (!program || !Array.isArray(program.rules)) {
+    return cloneReminderProgram(fallbackProgram);
   }
 
-  return alarms.map((alarm) => normalizeAlarm(alarm));
+  return {
+    version: 2,
+    rules: program.rules.map((rule) => createReminderRule(rule as ReminderRuleDraft)),
+  };
+}
+
+export function summarizeReminderProgram(
+  program: ReminderProgram,
+): {
+  totalRuleCount: number;
+  activeRuleCount: number;
+} {
+  const totalRuleCount = program.rules.length;
+  const activeRuleCount = program.rules.filter((rule) => rule.isEnabled).length;
+
+  return {
+    totalRuleCount,
+    activeRuleCount,
+  };
 }

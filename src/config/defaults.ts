@@ -2,8 +2,8 @@
 //  config/defaults.ts - 默认配置与存储命名空间
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { Alarm, Config, Period } from "../types";
-import { cloneAlarm, clonePeriod } from "./model";
+import type { Config, Period, ReminderProgram } from "../types";
+import { clonePeriod, cloneReminderProgram, createReminderRule } from "./model";
 
 export const DEFAULT_PERIODS: Period[] = [
   { start: "08:00" },
@@ -22,9 +22,18 @@ export const DEFAULT_PERIODS: Period[] = [
 
 export const DEFAULT_DURATION = 45;
 
-export const DEFAULT_ALARMS: Alarm[] = [
-  { enabled: true, minutes: 15, action: "DISPLAY" },
-];
+export const DEFAULT_REMINDER_PROGRAM: ReminderProgram = {
+  version: 2,
+  rules: [
+    createReminderRule({
+      id: "default-course-start-countdown",
+      isEnabled: true,
+      offset: { minutesBeforeStart: 15 },
+      delivery: { kind: "DISPLAY" },
+      template: { kind: "course-start-countdown" },
+    }),
+  ],
+};
 
 export const STORAGE_NAMESPACE = "ics_";
 
@@ -32,6 +41,6 @@ export function defaultConfig(): Config {
   return {
     duration: DEFAULT_DURATION,
     periods: DEFAULT_PERIODS.map(clonePeriod),
-    alarms: DEFAULT_ALARMS.map(cloneAlarm),
+    reminderProgram: cloneReminderProgram(DEFAULT_REMINDER_PROGRAM),
   };
 }

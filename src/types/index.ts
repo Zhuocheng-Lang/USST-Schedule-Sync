@@ -6,18 +6,37 @@ export interface Period {
   start: string;
 }
 
-export type AlarmAction = "DISPLAY" | "AUDIO";
+export type ReminderDeliveryKind = "DISPLAY" | "AUDIO";
 
-export interface Alarm {
-  enabled: boolean;
-  minutes: number;
-  action: AlarmAction;
+export interface ReminderOffset {
+  minutesBeforeStart: number;
+}
+
+export interface ReminderDelivery {
+  kind: ReminderDeliveryKind;
+}
+
+export interface ReminderTemplate {
+  kind: "course-start-countdown";
+}
+
+export interface ReminderRule {
+  id: string;
+  isEnabled: boolean;
+  offset: ReminderOffset;
+  delivery: ReminderDelivery;
+  template: ReminderTemplate;
+}
+
+export interface ReminderProgram {
+  version: 2;
+  rules: ReminderRule[];
 }
 
 export interface Config {
   duration: number;
   periods: Period[];
-  alarms: Alarm[];
+  reminderProgram: ReminderProgram;
 }
 
 export interface Course {

@@ -3,13 +3,18 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import {
-  DEFAULT_ALARMS,
   DEFAULT_DURATION,
   DEFAULT_PERIODS,
+  DEFAULT_REMINDER_PROGRAM,
   STORAGE_NAMESPACE,
   defaultConfig,
 } from "./defaults";
-import { cloneConfig, normalizeAlarms, normalizeDuration, normalizePeriods } from "./model";
+import {
+  cloneConfig,
+  normalizeDuration,
+  normalizePeriods,
+  normalizeReminderProgram,
+} from "./model";
 import type { Config } from "../types";
 
 function storageGet<T>(key: string, fallback: T): T {
@@ -35,7 +40,10 @@ export function getConfig(): Config {
     return {
       duration: normalizeDuration(saved.duration, DEFAULT_DURATION),
       periods: normalizePeriods(saved.periods, DEFAULT_PERIODS),
-      alarms: normalizeAlarms(saved.alarms, DEFAULT_ALARMS),
+      reminderProgram: normalizeReminderProgram(
+        saved.reminderProgram,
+        DEFAULT_REMINDER_PROGRAM,
+      ),
     };
   }
 

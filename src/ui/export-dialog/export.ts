@@ -2,7 +2,7 @@
 //  ui/export-dialog/export.ts - 导出动作与校验
 // ════════════════════════════════════════════════════════════════════════════
 
-import { saveSemStart } from "../../config";
+import { saveSemStart, summarizeReminderProgram } from "../../config";
 import { downloadICS, extractCourses, generateICS } from "../../core";
 import type { Config } from "../../types";
 
@@ -59,11 +59,11 @@ export function handleExportAction({
         saveSemStart(semKey, semStart);
       }
 
-      const activeAlarms = currentCfg.alarms.filter(
-        (alarm) => alarm.enabled,
-      ).length;
-      const alarmSummary = activeAlarms
-        ? `${activeAlarms} 条提醒`
+      const reminderSummary = summarizeReminderProgram(
+        currentCfg.reminderProgram,
+      );
+      const alarmSummary = reminderSummary.activeRuleCount
+        ? `${reminderSummary.activeRuleCount} 条提醒规则`
         : "无提醒";
       setStatus(
         `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,

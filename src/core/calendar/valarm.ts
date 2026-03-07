@@ -1,7 +1,33 @@
-import type { Alarm } from "../../types";
+import type {
+  ReminderDeliveryKind,
+  ReminderProgram,
+  ReminderRule,
+} from "../../types";
 import { escapeICSText } from "../../utils";
 
-export function toAlarmTrigger(minutesBeforeStart: number): string {
+export interface ReminderEventContext {
+  courseName: string;
+}
+
+export interface CompiledReminderAlarm {
+  ruleId: string;
+  action: ReminderDeliveryKind;
+  trigger: string;
+  description: string | null;
+  lines: string[];
+}
+
+export interface ReminderCompileResult {
+  nodes: CompiledReminderAlarm[];
+  lines: string[];
+  stats: {
+    totalRuleCount: number;
+    activeRuleCount: number;
+    emittedAlarmCount: number;
+  };
+}
+
+export function toReminderTrigger(minutesBeforeStart: number): string {
   let remainingMinutes = Math.max(1, Math.floor(minutesBeforeStart));
   const minutesPerDay = 24 * 60;
   const days = Math.floor(remainingMinutes / minutesPerDay);
@@ -26,20 +52,65 @@ export function toAlarmTrigger(minutesBeforeStart: number): string {
   return duration;
 }
 
-export function buildAlarmLines(courseName: string, alarms: Alarm[]): string[] {
-  const lines: string[] = [];
-
-  for (const alarm of alarms.filter((item) => item.enabled)) {
-    lines.push("BEGIN:VALARM");
-    lines.push(`ACTION:${alarm.action}`);
-    lines.push(`TRIGGER;RELATED=START;VALUE=DURATION:${toAlarmTrigger(alarm.minutes)}`);
-    if (alarm.action === "DISPLAY") {
-      lines.push(
-        `DESCRIPTION:${escapeICSText(`${courseName} 还有 ${alarm.minutes} 分钟`)}`,
-      );
-    }
-    lines.push("END:VALARM");
+function renderReminderDescription(
+  context: ReminderEventContext,
+  rule: ReminderRule,
+): string | null {
+  if (rule.delivery.kind !== "DISPLAY") {
+    return null;
   }
 
-  return lines;
+  return escapeICSText(
+    `${context.courseName} 还有 ${rule.offset.minutesBeforeStart} 分钟`,
+  );
+}
+
+export function compileReminderRule(
+  rule: ReminderRule,
+  context: ReminderEventContext,
+): CompiledReminderAlarm | null {
+  if (!rule.isEnabled) {
+    return null;
+  }
+
+  const trigger = toReminderTrigger(rule.offset.minutesBeforeStart);
+  const description = renderReminderDescription(context, rule);
+  const lines = [
+    "BEGIN:VALARM",
+    `ACTION:${rule.delivery.kind}`,
+    `TRIGGER;RELATED=START;VALUE=DURATION:${trigger}`,
+  ];
+
+  if (description) {
+    lines.push(`DESCRIPTION:${description}`);
+  }
+
+  lines.push("END:VALARM");
+
+  return {
+    ruleId: rule.id,
+    action: rule.delivery.kind,
+    trigger,
+    description,
+    lines,
+  };
+}
+
+export function compileReminderProgram(
+  program: ReminderProgram,
+  context: ReminderEventContext,
+): ReminderCompileResult {
+  const nodes = program.rules
+    .map((rule) => compileReminderRule(rule, context))
+    .filter((node): node is CompiledReminderAlarm => node !== null);
+
+  return {
+    nodes,
+    lines: nodes.flatMap((node) => node.lines),
+    stats: {
+      totalRuleCount: program.rules.length,
+      activeRuleCount: program.rules.filter((rule) => rule.isEnabled).length,
+      emittedAlarmCount: nodes.length,
+    },
+  };
 }

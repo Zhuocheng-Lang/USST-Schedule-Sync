@@ -2,8 +2,8 @@
 //  ui/builders.ts - 构建课程表和提醒规则的 DOM 元素
 // ════════════════════════════════════════════════════════════════════════════
 
-import { ALARM_ACTION_LABELS } from "../config";
-import type { Alarm } from "../types";
+import { REMINDER_DELIVERY_LABELS } from "../config";
+import type { ReminderRule } from "../types";
 import { addMinutes } from "../utils";
 import { cx, styles } from "./css";
 
@@ -51,21 +51,25 @@ export function makePeriodRow(
   return tr;
 }
 
-export function makeAlarmRow(index: number, alarm: Alarm): HTMLTableRowElement {
+export function makeReminderRuleRow(
+  index: number,
+  rule: ReminderRule,
+): HTMLTableRowElement {
   const tr = document.createElement("tr");
-  tr.className = cx(styles.alarmRow, !alarm.enabled && styles.alarmOff);
-  tr.dataset.alarmIdx = String(index);
+  tr.className = cx(styles.alarmRow, !rule.isEnabled && styles.alarmOff);
+  tr.dataset.reminderRuleId = rule.id;
+  tr.dataset.reminderRuleIndex = String(index);
 
   const toggle = document.createElement("label");
   toggle.className = styles.toggle;
-  toggle.title = alarm.enabled ? "已启用" : "已禁用";
-  toggle.dataset.role = "alarm-toggle";
+  toggle.title = rule.isEnabled ? "已启用" : "已禁用";
+  toggle.dataset.role = "reminder-rule-toggle";
 
   const chk = Object.assign(document.createElement("input"), {
     type: "checkbox",
-    checked: alarm.enabled,
+    checked: rule.isEnabled,
   });
-  chk.dataset.role = "alarm-enabled";
+  chk.dataset.role = "reminder-rule-enabled";
   const track = Object.assign(document.createElement("span"), {
     className: styles.toggleTrack,
   });
@@ -81,22 +85,22 @@ export function makeAlarmRow(index: number, alarm: Alarm): HTMLTableRowElement {
     className: styles.miniNumber,
     min: "1",
     max: "1440",
-    value: String(alarm.minutes),
+    value: String(rule.offset.minutesBeforeStart),
   });
-  numInp.dataset.role = "alarm-minutes";
+  numInp.dataset.role = "reminder-rule-minutes";
   const tdMin = document.createElement("td");
   tdMin.append(numInp, " 分钟前");
 
   const select = Object.assign(document.createElement("select"), {
     className: styles.miniSelect,
   });
-  select.dataset.role = "alarm-action";
-  for (const [value, label] of Object.entries(ALARM_ACTION_LABELS)) {
+  select.dataset.role = "reminder-rule-delivery";
+  for (const [value, label] of Object.entries(REMINDER_DELIVERY_LABELS)) {
     const option = Object.assign(document.createElement("option"), {
       value,
       textContent: label,
     });
-    if (value === alarm.action) {
+    if (value === rule.delivery.kind) {
       option.selected = true;
     }
     select.appendChild(option);
@@ -110,7 +114,7 @@ export function makeAlarmRow(index: number, alarm: Alarm): HTMLTableRowElement {
     title: "删除此规则",
     textContent: "×",
   });
-  delBtn.dataset.action = "delete-alarm";
+  delBtn.dataset.action = "delete-reminder-rule";
   const tdDel = document.createElement("td");
   tdDel.appendChild(delBtn);
 

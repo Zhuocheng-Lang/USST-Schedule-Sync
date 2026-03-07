@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { defaultConfig } from "../../src/config/defaults";
 import { generateICS } from "../../src/core/calendar/ics";
-import { toAlarmTrigger } from "../../src/core/calendar/valarm";
+import { toReminderTrigger } from "../../src/core/calendar/valarm";
 import type { Config, Course } from "../../src/types";
 
 const baseCourse: Course = {
@@ -26,10 +26,25 @@ function makeConfig(overrides?: Partial<Config>): Config {
 describe("generateICS alarms", () => {
   it("exports display and audio alarms with RFC-compatible triggers", () => {
     const config = makeConfig({
-      alarms: [
-        { enabled: true, minutes: 90, action: "DISPLAY" },
-        { enabled: true, minutes: 1565, action: "AUDIO" },
-      ],
+      reminderProgram: {
+        version: 2,
+        rules: [
+          {
+            id: "display-90",
+            isEnabled: true,
+            offset: { minutesBeforeStart: 90 },
+            delivery: { kind: "DISPLAY" },
+            template: { kind: "course-start-countdown" },
+          },
+          {
+            id: "audio-1565",
+            isEnabled: true,
+            offset: { minutesBeforeStart: 1565 },
+            delivery: { kind: "AUDIO" },
+            template: { kind: "course-start-countdown" },
+          },
+        ],
+      },
     });
 
     const { ics } = generateICS([baseCourse], "2026-03-02", config);
@@ -44,16 +59,16 @@ describe("generateICS alarms", () => {
   });
 
   it("formats trigger durations across minute boundaries", () => {
-    expect(toAlarmTrigger(1)).toBe("-PT1M");
-    expect(toAlarmTrigger(59)).toBe("-PT59M");
-    expect(toAlarmTrigger(60)).toBe("-PT1H");
-    expect(toAlarmTrigger(1440)).toBe("-P1D");
-    expect(toAlarmTrigger(1441)).toBe("-P1DT1M");
+    expect(toReminderTrigger(1)).toBe("-PT1M");
+    expect(toReminderTrigger(59)).toBe("-PT59M");
+    expect(toReminderTrigger(60)).toBe("-PT1H");
+    expect(toReminderTrigger(1440)).toBe("-P1D");
+    expect(toReminderTrigger(1441)).toBe("-P1DT1M");
   });
 
   it("keeps UID stable across repeated exports of the same course", () => {
     const config = makeConfig({
-      alarms: [],
+      reminderProgram: { version: 2, rules: [] },
     });
 
     const first = generateICS([baseCourse], "2026-03-02", config).ics;
@@ -73,7 +88,7 @@ describe("generateICS alarms", () => {
       rawWeeks: "",
     };
 
-    const { ics } = generateICS([course], "2026-03-02", makeConfig({ alarms: [] }));
+    const { ics } = generateICS([course], "2026-03-02", makeConfig({ reminderProgram: { version: 2, rules: [] } }));
 
     expect(ics).not.toMatch(/(?:^|\r\n)LOCATION:/);
     expect(ics).not.toContain("DESCRIPTION:教师：");
@@ -88,7 +103,7 @@ describe("generateICS alarms", () => {
       rawWeeks: "1-7周(单) 第5周停课",
     };
 
-    const { ics } = generateICS([course], "2026-03-02", makeConfig({ alarms: [] }));
+    const { ics } = generateICS([course], "2026-03-02", makeConfig({ reminderProgram: { version: 2, rules: [] } }));
 
     expect(ics).toContain("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4");
     expect(ics).toContain(
@@ -105,7 +120,7 @@ describe("generateICS alarms", () => {
       rawWeeks: "1-3周",
     };
 
-    const { ics } = generateICS([course], "2026-03-02", makeConfig({ alarms: [] }));
+    const { ics } = generateICS([course], "2026-03-02", makeConfig({ reminderProgram: { version: 2, rules: [] } }));
 
     expect(ics).toContain("PRODID:-//Zhuocheng Lang//USST Schedule Sync//CN");
     expect(ics).toContain(String.raw`SUMMARY:软件\,工程\;基础`);
@@ -134,7 +149,7 @@ describe("generateICS alarms", () => {
     const { ics } = generateICS(
       [baseCourse],
       "2026-03-02",
-      makeConfig({ alarms: [] }),
+      makeConfig({ reminderProgram: { version: 2, rules: [] } }),
     );
 
     expect(ics).not.toContain("BEGIN:VALARM");
@@ -145,10 +160,25 @@ describe("generateICS alarms", () => {
       [baseCourse],
       "2026-03-02",
       makeConfig({
-        alarms: [
-          { enabled: false, minutes: 15, action: "DISPLAY" },
-          { enabled: false, minutes: 30, action: "AUDIO" },
-        ],
+        reminderProgram: {
+          version: 2,
+          rules: [
+            {
+              id: "disabled-display",
+              isEnabled: false,
+              offset: { minutesBeforeStart: 15 },
+              delivery: { kind: "DISPLAY" },
+              template: { kind: "course-start-countdown" },
+            },
+            {
+              id: "disabled-audio",
+              isEnabled: false,
+              offset: { minutesBeforeStart: 30 },
+              delivery: { kind: "AUDIO" },
+              template: { kind: "course-start-countdown" },
+            },
+          ],
+        },
       }),
     );
 

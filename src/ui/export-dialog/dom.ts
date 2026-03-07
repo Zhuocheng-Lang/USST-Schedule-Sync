@@ -3,7 +3,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import type { Config } from "../../types";
-import { makeAlarmRow, makePeriodRow } from "../builders";
+import { makePeriodRow, makeReminderRuleRow } from "../builders";
 import { cx, styles } from "../css";
 
 function createTableHead(labels: readonly string[]): HTMLTableSectionElement {
@@ -23,11 +23,11 @@ function createTableHead(labels: readonly string[]): HTMLTableSectionElement {
 function createAlarmTipContent(): DocumentFragment {
   const fragment = document.createDocumentFragment();
   const code = document.createElement("code");
-  code.textContent = "VALARM";
+  code.textContent = "Reminder Program";
   fragment.append(
-    "每条规则在每个日历事件中写入一个 ",
+    "每条规则会先编译为内部提醒节点，再为每个日历事件写入一个 ",
     code,
-    "，可叠加多条。",
+    " → VALARM，可叠加多条。",
     document.createElement("br"),
   );
 
@@ -66,8 +66,8 @@ export interface DialogElements {
   durInp: HTMLInputElement;
   periodTb: HTMLTableSectionElement;
   addPeriodBtn: HTMLButtonElement;
-  alarmTb: HTMLTableSectionElement;
-  addAlarmBtn: HTMLButtonElement;
+  reminderRuleTb: HTMLTableSectionElement;
+  addReminderRuleBtn: HTMLButtonElement;
   exportBtn: HTMLButtonElement;
   statusEl: HTMLDivElement;
 }
@@ -128,7 +128,7 @@ export function createDialogElements(
   const tabDefs = [
     { id: "export", label: "导出设置" },
     { id: "schedule", label: "节次时间" },
-    { id: "alarm", label: "课前提醒" },
+    { id: "reminder", label: "课前提醒" },
   ] as const;
   for (const { id, label } of tabDefs) {
     const isActive = id === "export";
@@ -265,11 +265,11 @@ export function createDialogElements(
 
   const panelAlarm = Object.assign(document.createElement("div"), {
     className: styles.panel,
-    id: "ics-tab-alarm",
+    id: "ics-tab-reminder",
   });
   panelAlarm.dataset.role = "tab-panel";
   panelAlarm.setAttribute("role", "tabpanel");
-  panelAlarm.setAttribute("aria-labelledby", "ics-tab-btn-alarm");
+  panelAlarm.setAttribute("aria-labelledby", "ics-tab-btn-reminder");
   panelAlarm.setAttribute("aria-hidden", "true");
   panelAlarm.hidden = true;
 
@@ -281,20 +281,20 @@ export function createDialogElements(
   const alarmTbl = document.createElement("table");
   alarmTbl.className = styles.table;
   alarmTbl.appendChild(createTableHead(["开启", "提前时间", "提醒方式", ""]));
-  const alarmTb = document.createElement("tbody");
-  alarmTb.id = "ics-alarm-tbody";
-  cfg.alarms.forEach((alarm, index) =>
-    alarmTb.appendChild(makeAlarmRow(index, alarm)),
+  const reminderRuleTb = document.createElement("tbody");
+  reminderRuleTb.id = "ics-reminder-rule-tbody";
+  cfg.reminderProgram.rules.forEach((rule, index) =>
+    reminderRuleTb.appendChild(makeReminderRuleRow(index, rule)),
   );
-  alarmTbl.appendChild(alarmTb);
+  alarmTbl.appendChild(reminderRuleTb);
 
-  const addAlarmBtn = Object.assign(document.createElement("button"), {
+  const addReminderRuleBtn = Object.assign(document.createElement("button"), {
     type: "button",
-    id: "ics-add-alarm-btn",
+    id: "ics-add-reminder-rule-btn",
     className: styles.addButton,
     textContent: "＋ 添加提醒规则",
   });
-  panelAlarm.append(alarmTip, alarmTbl, addAlarmBtn);
+  panelAlarm.append(alarmTip, alarmTbl, addReminderRuleBtn);
 
   panelsEl.append(panelExport, panelSchedule, panelAlarm);
 
@@ -327,8 +327,8 @@ export function createDialogElements(
     durInp,
     periodTb,
     addPeriodBtn,
-    alarmTb,
-    addAlarmBtn,
+    reminderRuleTb,
+    addReminderRuleBtn,
     exportBtn,
     statusEl,
   };

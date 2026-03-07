@@ -14,7 +14,7 @@ import {
   toICSDateTime,
   toICSDateTimeList,
 } from "../../utils";
-import { buildAlarmLines } from "./valarm";
+import { compileReminderProgram } from "./valarm";
 
 const VTIMEZONE_SHANGHAI = [
   "BEGIN:VTIMEZONE",
@@ -180,7 +180,11 @@ export function generateICS(
       );
     }
 
-    lines.push(...buildAlarmLines(course.name, cfg.alarms));
+    lines.push(
+      ...compileReminderProgram(cfg.reminderProgram, {
+        courseName: course.name,
+      }).lines,
+    );
 
     lines.push("END:VEVENT");
     eventCount++;

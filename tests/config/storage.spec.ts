@@ -14,40 +14,53 @@ afterEach(() => {
 });
 
 describe("getConfig", () => {
-  it("normalizes malformed legacy alarm config", () => {
+  it("normalizes malformed reminder program config", () => {
     vi.stubGlobal(
       "GM_getValue",
       vi.fn(() =>
         JSON.stringify({
           duration: 45,
           periods: [{ start: "08:00" }],
-          alarms: [{ minutes: "15", action: "AUDIO" }],
+          reminderProgram: {
+            version: 2,
+            rules: [
+              {
+                isEnabled: true,
+                offset: { minutesBeforeStart: "15" },
+                delivery: { kind: "AUDIO" },
+              },
+            ],
+          },
         }),
       ),
     );
 
     const config = getConfig();
 
-    expect(config.alarms).toEqual([
-      { enabled: true, minutes: 15, action: "AUDIO" },
-    ]);
+    expect(config.reminderProgram.rules).toHaveLength(1);
+    expect(config.reminderProgram.rules[0]).toMatchObject({
+      isEnabled: true,
+      offset: { minutesBeforeStart: 15 },
+      delivery: { kind: "AUDIO" },
+      template: { kind: "course-start-countdown" },
+    });
   });
 
-  it("preserves an explicit empty alarm list", () => {
+  it("preserves an explicit empty reminder rule list", () => {
     vi.stubGlobal(
       "GM_getValue",
       vi.fn(() =>
         JSON.stringify({
           duration: 45,
           periods: [{ start: "08:00" }],
-          alarms: [],
+          reminderProgram: { version: 2, rules: [] },
         }),
       ),
     );
 
     const config = getConfig();
 
-    expect(config.alarms).toEqual([]);
+    expect(config.reminderProgram.rules).toEqual([]);
   });
 
   it("round-trips the normalized export config through storage", () => {
@@ -66,13 +79,13 @@ describe("getConfig", () => {
     saveConfig({
       duration: 50,
       periods: [{ start: "08:30" }],
-      alarms: [],
+      reminderProgram: { version: 2, rules: [] },
     });
 
     expect(getConfig()).toEqual({
       duration: 50,
       periods: [{ start: "08:30" }],
-      alarms: [],
+      reminderProgram: { version: 2, rules: [] },
     });
   });
 });

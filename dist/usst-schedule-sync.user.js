@@ -29,111 +29,6 @@
 
   o(' ._backdrop_2n40w_1{display:none;position:fixed;inset:0;z-index:99998;background:#00000080}._backdrop_2n40w_1._dialogOpen_2n40w_9{display:block;animation:_backdropIn_2n40w_1 .15s linear forwards}@keyframes _backdropIn_2n40w_1{0%{opacity:0}to{opacity:1}}._dialog_2n40w_9{display:none;position:fixed;z-index:99999;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;max-width:calc(100vw - 20px);max-height:calc(100vh - 20px);background:#fff;border:1px solid rgba(0,0,0,.2);border-radius:6px;box-shadow:0 5px 15px #00000080;font-family:Helvetica Neue,Helvetica,PingFang SC,Microsoft YaHei,Arial,sans-serif;font-size:14px;color:#333;flex-direction:column;background-clip:padding-box}._dialog_2n40w_9._dialogOpen_2n40w_9{display:flex;animation:_dialogIn_2n40w_1 .3s ease-out forwards}@keyframes _dialogIn_2n40w_1{0%{opacity:0;transform:translate(-50%,-50%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}._header_2n40w_64{display:flex;align-items:center;justify-content:space-between;padding:15px;border-bottom:1px solid #e5e5e5;flex-shrink:0}._headerTitle_2n40w_73{display:flex;align-items:center;gap:10px}._logo_2n40w_79{width:30px;height:30px;border-radius:4px;flex-shrink:0;background:#337ab7;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff}._titleText_2n40w_92{font-size:18px;font-weight:500;line-height:1.1}._titleSub_2n40w_98{font-size:12px;color:#777;margin-top:2px}._closeButton_2n40w_104{width:24px;height:24px;background:transparent;border:none;font-size:21px;font-weight:700;color:#000;text-shadow:0 1px 0 #fff;opacity:.2;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s}._closeButton_2n40w_104:hover{opacity:.5}._closeButton_2n40w_104:focus-visible{outline:none;opacity:.5}._tabs_2n40w_130{display:flex;margin:15px 15px 0;flex-shrink:0;border-bottom:1px solid #ddd}._tabButton_2n40w_137{padding:10px 15px;border:1px solid transparent;background:transparent;font-size:14px;color:#337ab7;cursor:pointer;margin-bottom:-1px;border-radius:4px 4px 0 0;line-height:1.42857143}._tabButtonActive_2n40w_149{color:#555;background-color:#fff;border-color:#ddd #ddd transparent;border-bottom-color:transparent;cursor:default}._tabButton_2n40w_137:hover:not(._tabButtonActive_2n40w_149){background-color:#eee;border-color:#eee #eee #ddd}._tabButton_2n40w_137:focus-visible{outline:none}._panels_2n40w_166{overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0;max-height:54vh;padding:15px}._panel_2n40w_166{display:none}._panelActive_2n40w_179{display:block}._row_2n40w_183{margin-bottom:15px}._row_2n40w_183:last-child{margin-bottom:0}._label_2n40w_191{display:inline-block;align-items:center;gap:5px;max-width:100%;margin-bottom:5px;font-weight:700;color:#333;font-size:14px}._required_2n40w_202{color:#a94442}._field_2n40w_206{display:block;width:100%;height:34px;padding:6px 12px;font-family:inherit;font-size:14px;line-height:1.42857143;color:#555;background-color:#fff;background-image:none;border:1px solid #ccc;border-radius:4px;box-shadow:inset 0 1px 1px #00000013;transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s}._field_2n40w_206:focus{border-color:#66afe9;outline:0;box-shadow:inset 0 1px 1px #00000013,0 0 8px #66afe999}._tip_2n40w_233{display:block;font-size:12px;color:#737373;margin-top:5px;margin-bottom:10px}._scheduleTip_2n40w_241{margin-top:8px}._alarmTip_2n40w_245{margin-bottom:12px}._twoColumn_2n40w_249{display:grid;grid-template-columns:1fr 1fr;gap:15px}._sectionHeading_2n40w_255{font-size:16px;font-weight:500;color:#333;margin:20px 0 10px;padding-bottom:5px;border-bottom:1px solid #eee}._sectionHeading_2n40w_255:first-child{margin-top:0}._table_2n40w_268{width:100%;max-width:100%;margin-bottom:20px;background-color:transparent;border-collapse:collapse;border-spacing:0;font-size:14px}._table_2n40w_268 th,._table_2n40w_268 td{padding:8px;line-height:1.42857143;vertical-align:middle;border-top:1px solid #ddd}._table_2n40w_268 th{text-align:left;font-weight:700;color:#333;border-bottom:2px solid #ddd}._table_2n40w_268 tbody tr:nth-of-type(odd){background-color:#f9f9f9}._cellNo_2n40w_297{color:#777;width:30px;text-align:center}._cellEnd_2n40w_303{color:#777;padding-left:5px!important;white-space:nowrap}._toggleCell_2n40w_309{width:45px;text-align:center}._timeInput_2n40w_314,._miniNumber_2n40w_315,._miniSelect_2n40w_316{display:inline-block;height:30px;padding:5px 10px;font-size:12px;line-height:1.5;color:#555;background-color:#fff;background-image:none;border:1px solid #ccc;border-radius:3px;box-shadow:inset 0 1px 1px #00000013;transition:border-color ease-in-out .15s,box-shadow ease-in-out .15s}._timeInput_2n40w_314:focus,._miniNumber_2n40w_315:focus,._miniSelect_2n40w_316:focus{border-color:#66afe9;outline:0;box-shadow:inset 0 1px 1px #00000013,0 0 8px #66afe999}._timeInput_2n40w_314{width:80px;text-align:center}._miniNumber_2n40w_315{width:60px;text-align:center}._miniSelect_2n40w_316{cursor:pointer}._deleteButton_2n40w_357{background:none;border:none;color:#a94442;cursor:pointer;font-size:18px;line-height:1;padding:2px 5px;border-radius:3px;opacity:.6}._deleteButton_2n40w_357:hover{opacity:1}._deleteButton_2n40w_357:focus-visible{outline:none;opacity:1}._addButton_2n40w_378{display:inline-block;margin-top:10px;padding:6px 12px;margin-bottom:0;font-size:14px;font-weight:400;line-height:1.42857143;text-align:center;white-space:nowrap;vertical-align:middle;cursor:pointer;background-image:none;border:1px dashed #ccc;border-radius:4px;color:#333;background-color:#fff}._addButton_2n40w_378:hover{color:#333;background-color:#e6e6e6;border-color:#adadad}._addButton_2n40w_378:focus-visible{outline:none}._toggle_2n40w_309{position:relative;display:inline-block;width:32px;height:20px}._toggle_2n40w_309 input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}._toggleTrack_2n40w_423{position:absolute;inset:0;pointer-events:none;background:#ccc;border-radius:10px;transition:background .2s}._toggleTrack_2n40w_423:before{content:"";position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 2px #0003}._toggle_2n40w_309 input:checked~._toggleTrack_2n40w_423{background:#337ab7}._toggle_2n40w_309 input:checked~._toggleTrack_2n40w_423:before{transform:translate(12px)}._toggle_2n40w_309 input:focus-visible~._toggleTrack_2n40w_423{outline:2px solid #66afe9;outline-offset:2px}._alarmRow_2n40w_458._alarmOff_2n40w_458 td:not(._toggleCell_2n40w_309){opacity:.5;pointer-events:none}._preview_2n40w_463{margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,1fr)}._preview_2n40w_463 li{list-style:none;display:flex;gap:6px;align-items:baseline;font-size:14px;line-height:1.5}._previewIndex_2n40w_479{color:#777;width:16px;text-align:right;flex-shrink:0;font-size:12px}._previewTime_2n40w_487{color:#333;font-variant-numeric:tabular-nums}._previewEnd_2n40w_492{color:#777;font-size:12px}._footer_2n40w_497{padding:15px;border-top:1px solid #e5e5e5;display:flex;align-items:center;gap:15px;flex-shrink:0}._exportButton_2n40w_506{display:inline-block;padding:6px 12px;margin-bottom:0;font-size:14px;font-weight:400;line-height:1.42857143;text-align:center;white-space:nowrap;vertical-align:middle;cursor:pointer;background-image:none;border:1px solid transparent;border-radius:4px;color:#fff;background-color:#337ab7;border-color:#2e6da4;box-shadow:none}._exportButton_2n40w_506:hover{color:#fff;background-color:#286090;border-color:#204d74}._exportButton_2n40w_506:focus-visible{outline:thin dotted;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}._status_2n40w_538{flex:1;font-size:14px;min-height:16px;line-height:1.5;word-break:break-word}._statusOk_2n40w_546{color:#3c763d}._statusError_2n40w_550{color:#a94442}._statusInfo_2n40w_554{color:#777} ');
 
-  const DEFAULT_PERIOD_START = "08:00";
-  const DEFAULT_ALARM_MINUTES = 15;
-  const DEFAULT_ALARM_ACTION = "DISPLAY";
-  const ALARM_ACTION_LABELS = {
-    DISPLAY: "静默通知",
-    AUDIO: "响铃提醒"
-  };
-  function clonePeriod(period) {
-    return { ...period };
-  }
-  function cloneAlarm(alarm) {
-    return { ...alarm };
-  }
-  function cloneConfig(config) {
-    return {
-      duration: config.duration,
-      periods: config.periods.map(clonePeriod),
-      alarms: config.alarms.map(cloneAlarm)
-    };
-  }
-  function normalizeDuration(value, fallback) {
-    const normalized = Number.parseInt(String(value ?? fallback), 10);
-    return Math.max(1, normalized || fallback);
-  }
-  function normalizePeriod(period, fallbackStart = DEFAULT_PERIOD_START) {
-    return {
-      start: typeof period?.start === "string" && period.start.trim() ? period.start.trim() : fallbackStart
-    };
-  }
-  function normalizePeriods(periods, fallbackPeriods) {
-    if (!Array.isArray(periods) || !periods.length) {
-      return fallbackPeriods.map(clonePeriod);
-    }
-    return periods.map(
-      (period, index) => normalizePeriod(period, fallbackPeriods[index]?.start ?? DEFAULT_PERIOD_START)
-    );
-  }
-  function normalizeAlarm(alarm) {
-    return {
-      enabled: alarm?.enabled ?? true,
-      minutes: normalizeDuration(alarm?.minutes, DEFAULT_ALARM_MINUTES),
-      action: alarm?.action === "AUDIO" ? "AUDIO" : DEFAULT_ALARM_ACTION
-    };
-  }
-  function normalizeAlarms(alarms, fallbackAlarms) {
-    if (!Array.isArray(alarms)) {
-      return fallbackAlarms.map(cloneAlarm);
-    }
-    return alarms.map((alarm) => normalizeAlarm(alarm));
-  }
-  const DEFAULT_PERIODS = [
-    { start: "08:00" },
-    { start: "08:50" },
-    { start: "09:55" },
-    { start: "10:45" },
-    { start: "11:35" },
-    { start: "13:15" },
-    { start: "14:05" },
-    { start: "15:05" },
-    { start: "15:55" },
-    { start: "18:00" },
-    { start: "18:50" },
-    { start: "19:40" }
-  ];
-  const DEFAULT_DURATION = 45;
-  const DEFAULT_ALARMS = [
-    { enabled: true, minutes: 15, action: "DISPLAY" }
-  ];
-  const STORAGE_NAMESPACE = "ics_";
-  function defaultConfig() {
-    return {
-      duration: DEFAULT_DURATION,
-      periods: DEFAULT_PERIODS.map(clonePeriod),
-      alarms: DEFAULT_ALARMS.map(cloneAlarm)
-    };
-  }
-  function storageGet(key, fallback) {
-    try {
-      const raw = GM_getValue(STORAGE_NAMESPACE + key, null);
-      return raw !== null ? JSON.parse(raw) : fallback;
-    } catch {
-      return fallback;
-    }
-  }
-  function storageSet(key, value) {
-    try {
-      GM_setValue(STORAGE_NAMESPACE + key, JSON.stringify(value));
-    } catch (error) {
-      console.warn("[ICS] storage write failed:", error);
-    }
-  }
-  function getConfig() {
-    const saved = storageGet("config", null);
-    if (saved) {
-      return {
-        duration: normalizeDuration(saved.duration, DEFAULT_DURATION),
-        periods: normalizePeriods(saved.periods, DEFAULT_PERIODS),
-        alarms: normalizeAlarms(saved.alarms, DEFAULT_ALARMS)
-      };
-    }
-    return defaultConfig();
-  }
-  const saveConfig = (cfg) => storageSet("config", cloneConfig(cfg));
-  const getSemStart = (key) => storageGet("semstart_" + key, null);
-  const saveSemStart = (key, value) => storageSet("semstart_" + key, value);
   function addMinutes(hhmm, mins) {
     const [hours, minutes] = hhmm.split(":").map(Number);
     const total = Math.min(
@@ -279,7 +174,161 @@
   function normalizeText(text) {
     return text.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
   }
-  function toAlarmTrigger(minutesBeforeStart) {
+  const DEFAULT_PERIOD_START = "08:00";
+  const DEFAULT_REMINDER_LEAD_MINUTES = 15;
+  const DEFAULT_REMINDER_DELIVERY_KIND = "DISPLAY";
+  const REMINDER_DELIVERY_LABELS = {
+    DISPLAY: "静默通知",
+    AUDIO: "响铃提醒"
+  };
+  function clonePeriod(period) {
+    return { ...period };
+  }
+  function createReminderRuleId(seed = `${Date.now()}-${Math.random()}`) {
+    return stableUid(seed, "usst.reminder");
+  }
+  function cloneReminderRule(rule) {
+    return {
+      id: rule.id,
+      isEnabled: rule.isEnabled,
+      offset: { ...rule.offset },
+      delivery: { ...rule.delivery },
+      template: { ...rule.template }
+    };
+  }
+  function cloneReminderProgram(program) {
+    return {
+      version: 2,
+      rules: program.rules.map(cloneReminderRule)
+    };
+  }
+  function cloneConfig(config) {
+    return {
+      duration: config.duration,
+      periods: config.periods.map(clonePeriod),
+      reminderProgram: cloneReminderProgram(config.reminderProgram)
+    };
+  }
+  function normalizeDuration(value, fallback) {
+    const normalized = Number.parseInt(String(value ?? fallback), 10);
+    return Math.max(1, normalized || fallback);
+  }
+  function normalizePeriod(period, fallbackStart = DEFAULT_PERIOD_START) {
+    return {
+      start: typeof period?.start === "string" && period.start.trim() ? period.start.trim() : fallbackStart
+    };
+  }
+  function normalizePeriods(periods, fallbackPeriods) {
+    if (!Array.isArray(periods) || !periods.length) {
+      return fallbackPeriods.map(clonePeriod);
+    }
+    return periods.map(
+      (period, index) => normalizePeriod(period, fallbackPeriods[index]?.start ?? DEFAULT_PERIOD_START)
+    );
+  }
+  function createReminderRule(draft = {}) {
+    const deliveryKind = draft.delivery?.kind === "AUDIO" ? "AUDIO" : DEFAULT_REMINDER_DELIVERY_KIND;
+    return {
+      id: typeof draft.id === "string" && draft.id.trim() ? draft.id.trim() : createReminderRuleId(),
+      isEnabled: draft.isEnabled !== false,
+      offset: {
+        minutesBeforeStart: normalizeDuration(
+          draft.offset?.minutesBeforeStart,
+          DEFAULT_REMINDER_LEAD_MINUTES
+        )
+      },
+      delivery: {
+        kind: deliveryKind
+      },
+      template: {
+        kind: draft.template?.kind === "course-start-countdown" ? "course-start-countdown" : "course-start-countdown"
+      }
+    };
+  }
+  function normalizeReminderProgram(program, fallbackProgram) {
+    if (!program || !Array.isArray(program.rules)) {
+      return cloneReminderProgram(fallbackProgram);
+    }
+    return {
+      version: 2,
+      rules: program.rules.map((rule) => createReminderRule(rule))
+    };
+  }
+  function summarizeReminderProgram(program) {
+    const totalRuleCount = program.rules.length;
+    const activeRuleCount = program.rules.filter((rule) => rule.isEnabled).length;
+    return {
+      totalRuleCount,
+      activeRuleCount
+    };
+  }
+  const DEFAULT_PERIODS = [
+    { start: "08:00" },
+    { start: "08:50" },
+    { start: "09:55" },
+    { start: "10:45" },
+    { start: "11:35" },
+    { start: "13:15" },
+    { start: "14:05" },
+    { start: "15:05" },
+    { start: "15:55" },
+    { start: "18:00" },
+    { start: "18:50" },
+    { start: "19:40" }
+  ];
+  const DEFAULT_DURATION = 45;
+  const DEFAULT_REMINDER_PROGRAM = {
+    rules: [
+      createReminderRule({
+        id: "default-course-start-countdown",
+        isEnabled: true,
+        offset: { minutesBeforeStart: 15 },
+        delivery: { kind: "DISPLAY" },
+        template: { kind: "course-start-countdown" }
+      })
+    ]
+  };
+  const STORAGE_NAMESPACE = "ics_";
+  function defaultConfig() {
+    return {
+      duration: DEFAULT_DURATION,
+      periods: DEFAULT_PERIODS.map(clonePeriod),
+      reminderProgram: cloneReminderProgram(DEFAULT_REMINDER_PROGRAM)
+    };
+  }
+  function storageGet(key, fallback) {
+    try {
+      const raw = GM_getValue(STORAGE_NAMESPACE + key, null);
+      return raw !== null ? JSON.parse(raw) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  function storageSet(key, value) {
+    try {
+      GM_setValue(STORAGE_NAMESPACE + key, JSON.stringify(value));
+    } catch (error) {
+      console.warn("[ICS] storage write failed:", error);
+    }
+  }
+  function getConfig() {
+    const saved = storageGet("config", null);
+    if (saved) {
+      return {
+        duration: normalizeDuration(saved.duration, DEFAULT_DURATION),
+        periods: normalizePeriods(saved.periods, DEFAULT_PERIODS),
+        reminderProgram: normalizeReminderProgram(
+          saved.reminderProgram,
+          DEFAULT_REMINDER_PROGRAM
+        )
+      };
+    }
+    return defaultConfig();
+  }
+  const saveConfig = (cfg) => storageSet("config", cloneConfig(cfg));
+  const getSemStart = (key) => storageGet("semstart_" + key, null);
+  const saveSemStart = (key, value) => storageSet("semstart_" + key, value);
+  function toReminderTrigger(minutesBeforeStart) {
     let remainingMinutes = Math.max(1, Math.floor(minutesBeforeStart));
     const minutesPerDay = 24 * 60;
     const days = Math.floor(remainingMinutes / minutesPerDay);
@@ -301,20 +350,48 @@
     }
     return duration;
   }
-  function buildAlarmLines(courseName, alarms) {
-    const lines = [];
-    for (const alarm of alarms.filter((item) => item.enabled)) {
-      lines.push("BEGIN:VALARM");
-      lines.push(`ACTION:${alarm.action}`);
-      lines.push(`TRIGGER;RELATED=START;VALUE=DURATION:${toAlarmTrigger(alarm.minutes)}`);
-      if (alarm.action === "DISPLAY") {
-        lines.push(
-          `DESCRIPTION:${escapeICSText(`${courseName} 还有 ${alarm.minutes} 分钟`)}`
-        );
-      }
-      lines.push("END:VALARM");
+  function renderReminderDescription(context, rule) {
+    if (rule.delivery.kind !== "DISPLAY") {
+      return null;
     }
-    return lines;
+    return escapeICSText(
+      `${context.courseName} 还有 ${rule.offset.minutesBeforeStart} 分钟`
+    );
+  }
+  function compileReminderRule(rule, context) {
+    if (!rule.isEnabled) {
+      return null;
+    }
+    const trigger = toReminderTrigger(rule.offset.minutesBeforeStart);
+    const description = renderReminderDescription(context, rule);
+    const lines = [
+      "BEGIN:VALARM",
+      `ACTION:${rule.delivery.kind}`,
+      `TRIGGER;RELATED=START;VALUE=DURATION:${trigger}`
+    ];
+    if (description) {
+      lines.push(`DESCRIPTION:${description}`);
+    }
+    lines.push("END:VALARM");
+    return {
+      ruleId: rule.id,
+      action: rule.delivery.kind,
+      trigger,
+      description,
+      lines
+    };
+  }
+  function compileReminderProgram(program, context) {
+    const nodes = program.rules.map((rule) => compileReminderRule(rule, context)).filter((node) => node !== null);
+    return {
+      nodes,
+      lines: nodes.flatMap((node) => node.lines),
+      stats: {
+        totalRuleCount: program.rules.length,
+        activeRuleCount: program.rules.filter((rule) => rule.isEnabled).length,
+        emittedAlarmCount: nodes.length
+      }
+    };
   }
   const VTIMEZONE_SHANGHAI = [
     "BEGIN:VTIMEZONE",
@@ -438,7 +515,11 @@
           `EXDATE;TZID=${TZID}:${toICSDateTimeList(exdateList, startPeriod.start)}`
         );
       }
-      lines.push(...buildAlarmLines(course.name, cfg.alarms));
+      lines.push(
+        ...compileReminderProgram(cfg.reminderProgram, {
+          courseName: course.name
+        }).lines
+      );
       lines.push("END:VEVENT");
       eventCount++;
     }
@@ -765,19 +846,20 @@
     tr.append(tdNo, tdInp, tdEnd, tdDel);
     return tr;
   }
-  function makeAlarmRow(index, alarm) {
+  function makeReminderRuleRow(index, rule) {
     const tr = document.createElement("tr");
-    tr.className = cx(styles.alarmRow, !alarm.enabled && styles.alarmOff);
-    tr.dataset.alarmIdx = String(index);
+    tr.className = cx(styles.alarmRow, !rule.isEnabled && styles.alarmOff);
+    tr.dataset.reminderRuleId = rule.id;
+    tr.dataset.reminderRuleIndex = String(index);
     const toggle2 = document.createElement("label");
     toggle2.className = styles.toggle;
-    toggle2.title = alarm.enabled ? "已启用" : "已禁用";
-    toggle2.dataset.role = "alarm-toggle";
+    toggle2.title = rule.isEnabled ? "已启用" : "已禁用";
+    toggle2.dataset.role = "reminder-rule-toggle";
     const chk = Object.assign(document.createElement("input"), {
       type: "checkbox",
-      checked: alarm.enabled
+      checked: rule.isEnabled
     });
-    chk.dataset.role = "alarm-enabled";
+    chk.dataset.role = "reminder-rule-enabled";
     const track = Object.assign(document.createElement("span"), {
       className: styles.toggleTrack
     });
@@ -791,21 +873,21 @@
       className: styles.miniNumber,
       min: "1",
       max: "1440",
-      value: String(alarm.minutes)
+      value: String(rule.offset.minutesBeforeStart)
     });
-    numInp.dataset.role = "alarm-minutes";
+    numInp.dataset.role = "reminder-rule-minutes";
     const tdMin = document.createElement("td");
     tdMin.append(numInp, " 分钟前");
     const select = Object.assign(document.createElement("select"), {
       className: styles.miniSelect
     });
-    select.dataset.role = "alarm-action";
-    for (const [value, label2] of Object.entries(ALARM_ACTION_LABELS)) {
+    select.dataset.role = "reminder-rule-delivery";
+    for (const [value, label2] of Object.entries(REMINDER_DELIVERY_LABELS)) {
       const option = Object.assign(document.createElement("option"), {
         value,
         textContent: label2
       });
-      if (value === alarm.action) {
+      if (value === rule.delivery.kind) {
         option.selected = true;
       }
       select.appendChild(option);
@@ -818,7 +900,7 @@
       title: "删除此规则",
       textContent: "×"
     });
-    delBtn.dataset.action = "delete-alarm";
+    delBtn.dataset.action = "delete-reminder-rule";
     const tdDel = document.createElement("td");
     tdDel.appendChild(delBtn);
     tr.append(tdToggle, tdMin, tdSel, tdDel);
@@ -838,11 +920,11 @@
   function createAlarmTipContent() {
     const fragment = document.createDocumentFragment();
     const code = document.createElement("code");
-    code.textContent = "VALARM";
+    code.textContent = "Reminder Program";
     fragment.append(
-      "每条规则在每个日历事件中写入一个 ",
+      "每条规则会先编译为内部提醒节点，再为每个日历事件写入一个 ",
       code,
-      "，可叠加多条。",
+      " → VALARM，可叠加多条。",
       document.createElement("br")
     );
     const display = document.createElement("b");
@@ -916,7 +998,7 @@
     const tabDefs = [
       { id: "export", label: "导出设置" },
       { id: "schedule", label: "节次时间" },
-      { id: "alarm", label: "课前提醒" }
+      { id: "reminder", label: "课前提醒" }
     ];
     for (const { id, label: label2 } of tabDefs) {
       const isActive = id === "export";
@@ -1040,11 +1122,11 @@
     );
     const panelAlarm = Object.assign(document.createElement("div"), {
       className: styles.panel,
-      id: "ics-tab-alarm"
+      id: "ics-tab-reminder"
     });
     panelAlarm.dataset.role = "tab-panel";
     panelAlarm.setAttribute("role", "tabpanel");
-    panelAlarm.setAttribute("aria-labelledby", "ics-tab-btn-alarm");
+    panelAlarm.setAttribute("aria-labelledby", "ics-tab-btn-reminder");
     panelAlarm.setAttribute("aria-hidden", "true");
     panelAlarm.hidden = true;
     const alarmTip2 = Object.assign(document.createElement("div"), {
@@ -1054,19 +1136,19 @@
     const alarmTbl = document.createElement("table");
     alarmTbl.className = styles.table;
     alarmTbl.appendChild(createTableHead(["开启", "提前时间", "提醒方式", ""]));
-    const alarmTb = document.createElement("tbody");
-    alarmTb.id = "ics-alarm-tbody";
-    cfg.alarms.forEach(
-      (alarm, index) => alarmTb.appendChild(makeAlarmRow(index, alarm))
+    const reminderRuleTb = document.createElement("tbody");
+    reminderRuleTb.id = "ics-reminder-rule-tbody";
+    cfg.reminderProgram.rules.forEach(
+      (rule, index) => reminderRuleTb.appendChild(makeReminderRuleRow(index, rule))
     );
-    alarmTbl.appendChild(alarmTb);
-    const addAlarmBtn = Object.assign(document.createElement("button"), {
+    alarmTbl.appendChild(reminderRuleTb);
+    const addReminderRuleBtn = Object.assign(document.createElement("button"), {
       type: "button",
-      id: "ics-add-alarm-btn",
+      id: "ics-add-reminder-rule-btn",
       className: styles.addButton,
       textContent: "＋ 添加提醒规则"
     });
-    panelAlarm.append(alarmTip2, alarmTbl, addAlarmBtn);
+    panelAlarm.append(alarmTip2, alarmTbl, addReminderRuleBtn);
     panelsEl.append(panelExport, panelSchedule, panelAlarm);
     const footer2 = document.createElement("div");
     footer2.className = styles.footer;
@@ -1095,8 +1177,8 @@
       durInp,
       periodTb,
       addPeriodBtn,
-      alarmTb,
-      addAlarmBtn,
+      reminderRuleTb,
+      addReminderRuleBtn,
       exportBtn,
       statusEl
     };
@@ -1139,10 +1221,10 @@
         if (semKey) {
           saveSemStart(semKey, semStart);
         }
-        const activeAlarms = currentCfg.alarms.filter(
-          (alarm) => alarm.enabled
-        ).length;
-        const alarmSummary = activeAlarms ? `${activeAlarms} 条提醒` : "无提醒";
+        const reminderSummary = summarizeReminderProgram(
+          currentCfg.reminderProgram
+        );
+        const alarmSummary = reminderSummary.activeRuleCount ? `${reminderSummary.activeRuleCount} 条提醒规则` : "无提醒";
         setStatus(
           `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,
           "ok"
@@ -1164,63 +1246,63 @@
       },
       setDuration(value) {
         config.duration = normalizeDuration(value, config.duration);
-        return {
-          duration: config.duration,
-          periods: config.periods.map((period) => ({ ...period }))
-        };
+        return cloneConfig(config);
       },
       setPeriodStart(index, start) {
         const current = config.periods[index];
         if (!current) {
-          return {
-            duration: config.duration,
-            periods: config.periods.map((period) => ({ ...period }))
-          };
+          return cloneConfig(config);
         }
         config.periods[index] = normalizePeriod({ start }, current.start);
-        return {
-          duration: config.duration,
-          periods: config.periods.map((period) => ({ ...period }))
-        };
+        return cloneConfig(config);
       },
       addPeriod(start) {
         config.periods.push(normalizePeriod({ start }));
-        return {
-          duration: config.duration,
-          periods: config.periods.map((period) => ({ ...period }))
-        };
+        return cloneConfig(config);
       },
       removePeriod(index) {
         if (config.periods.length <= 1) {
-          return {
-            duration: config.duration,
-            periods: config.periods.map((period) => ({ ...period }))
-          };
+          return cloneConfig(config);
         }
         config.periods.splice(index, 1);
-        return {
-          duration: config.duration,
-          periods: config.periods.map((period) => ({ ...period }))
-        };
+        return cloneConfig(config);
       },
-      updateAlarm(index, patch) {
-        const current = config.alarms[index];
-        if (!current) {
-          return config.alarms.map((alarm) => ({ ...alarm }));
+      setReminderRuleEnabled(ruleId, isEnabled) {
+        config.reminderProgram.rules = config.reminderProgram.rules.map(
+          (rule) => rule.id === ruleId ? createReminderRule({ ...rule, isEnabled }) : rule
+        );
+        return cloneConfig(config);
+      },
+      setReminderRuleMinutes(ruleId, minutesBeforeStart) {
+        config.reminderProgram.rules = config.reminderProgram.rules.map(
+          (rule) => rule.id === ruleId ? createReminderRule({
+            ...rule,
+            offset: { minutesBeforeStart }
+          }) : rule
+        );
+        return cloneConfig(config);
+      },
+      setReminderRuleDelivery(ruleId, kind) {
+        config.reminderProgram.rules = config.reminderProgram.rules.map(
+          (rule) => rule.id === ruleId ? createReminderRule({
+            ...rule,
+            delivery: { kind }
+          }) : rule
+        );
+        return cloneConfig(config);
+      },
+      addReminderRule(rule = {}) {
+        config.reminderProgram.rules.push(createReminderRule(rule));
+        return cloneConfig(config);
+      },
+      removeReminderRule(ruleId) {
+        if (config.reminderProgram.rules.length <= 1) {
+          return cloneConfig(config);
         }
-        config.alarms[index] = normalizeAlarm({ ...current, ...patch });
-        return config.alarms.map((alarm) => ({ ...alarm }));
-      },
-      addAlarm(alarm = {}) {
-        config.alarms.push(normalizeAlarm(alarm));
-        return config.alarms.map((item) => ({ ...item }));
-      },
-      removeAlarm(index) {
-        if (config.alarms.length <= 1) {
-          return config.alarms.map((alarm) => ({ ...alarm }));
-        }
-        config.alarms.splice(index, 1);
-        return config.alarms.map((alarm) => ({ ...alarm }));
+        config.reminderProgram.rules = config.reminderProgram.rules.filter(
+          (rule) => rule.id !== ruleId
+        );
+        return cloneConfig(config);
       }
     };
   }
@@ -1229,9 +1311,9 @@
       ...periods.map((period, index) => makePeriodRow(index, period.start, duration))
     );
   }
-  function renderAlarmRows(alarmTb, alarms) {
-    alarmTb.replaceChildren(
-      ...alarms.map((alarm, index) => makeAlarmRow(index, alarm))
+  function renderReminderRuleRows(reminderRuleTb, rules) {
+    reminderRuleTb.replaceChildren(
+      ...rules.map((rule, index) => makeReminderRuleRow(index, rule))
     );
   }
   function refreshPeriodTable(periodTb, { periods, duration }) {
@@ -1275,33 +1357,6 @@
       })
     );
   }
-  function refreshAlarmRows(alarmTb, alarms) {
-    Array.from(alarmTb.rows).forEach((tr, index) => {
-      const alarm = alarms[index] ?? normalizeAlarm({
-        enabled: false,
-        minutes: DEFAULT_ALARM_MINUTES,
-        action: DEFAULT_ALARM_ACTION
-      });
-      tr.dataset.alarmIdx = String(index);
-      tr.classList.toggle(styles.alarmOff, !alarm.enabled);
-      const checkbox = tr.querySelector('[data-role="alarm-enabled"]');
-      if (checkbox) {
-        checkbox.checked = alarm.enabled;
-      }
-      const minutesInput = tr.querySelector('[data-role="alarm-minutes"]');
-      if (minutesInput && minutesInput.value !== String(alarm.minutes)) {
-        minutesInput.value = String(alarm.minutes);
-      }
-      const actionSelect = tr.querySelector('[data-role="alarm-action"]');
-      if (actionSelect) {
-        actionSelect.value = alarm.action;
-      }
-      const toggleEl = tr.querySelector('[data-role="alarm-toggle"]');
-      if (toggleEl) {
-        toggleEl.title = alarm.enabled ? "已启用" : "已禁用";
-      }
-    });
-  }
   let syncExistingUI = null;
   function setActiveTab(tabBar, panelsEl, tabId) {
     for (const tabButton2 of Array.from(
@@ -1339,8 +1394,8 @@
       durInp,
       periodTb,
       addPeriodBtn,
-      alarmTb,
-      addAlarmBtn,
+      reminderRuleTb,
+      addReminderRuleBtn,
       exportBtn,
       statusEl
     } = createDialogElements(cfg, defaultDate);
@@ -1351,8 +1406,7 @@
       durInp.value = String(latest.duration);
       renderPeriodRows(periodTb, latest);
       refreshPeriodTable(periodTb, latest);
-      renderAlarmRows(alarmTb, latest.alarms);
-      refreshAlarmRows(alarmTb, latest.alarms);
+      renderReminderRuleRows(reminderRuleTb, latest.reminderProgram.rules);
       refreshPreview(previewList, latest);
     };
     function openDialog2() {
@@ -1399,29 +1453,27 @@
       saveConfig(current);
       return current;
     }
-    function onPeriodChange() {
-      const current = persistConfig();
+    function onPeriodChange(current = store.getConfig()) {
+      saveConfig(current);
       durInp.value = String(current.duration);
       refreshPeriodTable(periodTb, current);
       refreshPreview(previewList, current);
     }
-    function onAlarmChange() {
-      const current = persistConfig();
-      refreshAlarmRows(alarmTb, current.alarms);
+    function onReminderChange(current = store.getConfig()) {
+      saveConfig(current);
+      renderReminderRuleRows(reminderRuleTb, current.reminderProgram.rules);
     }
     refreshPreview(previewList, store.getConfig());
-    refreshAlarmRows(alarmTb, store.getConfig().alarms);
+    renderReminderRuleRows(reminderRuleTb, store.getConfig().reminderProgram.rules);
     durInp.addEventListener("input", () => {
-      store.setDuration(durInp.value);
-      onPeriodChange();
+      onPeriodChange(store.setDuration(durInp.value));
     });
     periodTb.addEventListener("input", (event) => {
       const target = event.target;
       if (target.matches('[data-role="period-start"]')) {
         const row2 = target.closest("tr[data-idx]");
         const index = Number.parseInt(row2?.dataset.idx ?? "-1", 10);
-        store.setPeriodStart(index, target.value);
-        onPeriodChange();
+        onPeriodChange(store.setPeriodStart(index, target.value));
       }
     });
     periodTb.addEventListener("click", (event) => {
@@ -1435,52 +1487,72 @@
       const index = Number.parseInt(row2?.dataset.idx ?? "-1", 10);
       const next = store.removePeriod(index);
       renderPeriodRows(periodTb, next);
-      onPeriodChange();
+      onPeriodChange(next);
     });
     addPeriodBtn.addEventListener("click", () => {
       const current = store.getConfig();
       const lastStart = current.periods.at(-1)?.start ?? "08:00";
       const nextStart = addMinutes(lastStart, current.duration + 10);
-      renderPeriodRows(periodTb, store.addPeriod(nextStart));
-      onPeriodChange();
+      const next = store.addPeriod(nextStart);
+      renderPeriodRows(periodTb, next);
+      onPeriodChange(next);
     });
-    alarmTb.addEventListener("change", (event) => {
+    reminderRuleTb.addEventListener("change", (event) => {
       const target = event.target;
-      const row2 = target.closest("tr[data-alarm-idx]");
-      const index = Number.parseInt(row2?.dataset.alarmIdx ?? "-1", 10);
-      if (target.matches('[data-role="alarm-enabled"]')) {
-        store.updateAlarm(index, { enabled: target.checked });
-        onAlarmChange();
+      const row2 = target.closest("tr[data-reminder-rule-id]");
+      const ruleId = row2?.dataset.reminderRuleId;
+      if (!ruleId) {
+        return;
       }
-      if (target.matches('[data-role="alarm-action"]')) {
-        store.updateAlarm(index, { action: target.value });
-        onAlarmChange();
+      if (target.matches('[data-role="reminder-rule-enabled"]')) {
+        onReminderChange(
+          store.setReminderRuleEnabled(
+            ruleId,
+            target.checked
+          )
+        );
+      }
+      if (target.matches('[data-role="reminder-rule-delivery"]')) {
+        onReminderChange(
+          store.setReminderRuleDelivery(
+            ruleId,
+            target.value
+          )
+        );
       }
     });
-    alarmTb.addEventListener("input", (event) => {
+    reminderRuleTb.addEventListener("input", (event) => {
       const target = event.target;
-      if (target.matches('[data-role="alarm-minutes"]')) {
-        const row2 = target.closest("tr[data-alarm-idx]");
-        const index = Number.parseInt(row2?.dataset.alarmIdx ?? "-1", 10);
-        store.updateAlarm(index, { minutes: Number.parseInt(target.value, 10) });
-        onAlarmChange();
+      if (target.matches('[data-role="reminder-rule-minutes"]')) {
+        const row2 = target.closest("tr[data-reminder-rule-id]");
+        const ruleId = row2?.dataset.reminderRuleId;
+        if (!ruleId) {
+          return;
+        }
+        onReminderChange(
+          store.setReminderRuleMinutes(
+            ruleId,
+            Number.parseInt(target.value, 10)
+          )
+        );
       }
     });
-    alarmTb.addEventListener("click", (event) => {
+    reminderRuleTb.addEventListener("click", (event) => {
       const btn = event.target.closest(
-        '[data-action="delete-alarm"]'
+        '[data-action="delete-reminder-rule"]'
       );
       if (!btn) {
         return;
       }
-      const row2 = btn.closest("tr[data-alarm-idx]");
-      const index = Number.parseInt(row2?.dataset.alarmIdx ?? "-1", 10);
-      renderAlarmRows(alarmTb, store.removeAlarm(index));
-      onAlarmChange();
+      const row2 = btn.closest("tr[data-reminder-rule-id]");
+      const ruleId = row2?.dataset.reminderRuleId;
+      if (!ruleId) {
+        return;
+      }
+      onReminderChange(store.removeReminderRule(ruleId));
     });
-    addAlarmBtn.addEventListener("click", () => {
-      renderAlarmRows(alarmTb, store.addAlarm());
-      onAlarmChange();
+    addReminderRuleBtn.addEventListener("click", () => {
+      onReminderChange(store.addReminderRule());
     });
     const statusClassNames = {
       error: styles.statusError,

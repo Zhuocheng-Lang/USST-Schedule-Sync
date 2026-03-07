@@ -11,11 +11,10 @@ import { createDialogElements } from "./export-dialog/dom";
 import { handleExportAction } from "./export-dialog/export";
 import {
   createDialogConfigStore,
-  renderAlarmRows,
   renderPeriodRows,
-  refreshAlarmRows,
   refreshPeriodTable,
   refreshPreview,
+  renderReminderRuleRows,
 } from "./export-dialog/state";
 
 let syncExistingUI: (() => void) | null = null;
@@ -64,8 +63,8 @@ export function createUI(): void {
     durInp,
     periodTb,
     addPeriodBtn,
-    alarmTb,
-    addAlarmBtn,
+    reminderRuleTb,
+    addReminderRuleBtn,
     exportBtn,
     statusEl,
   } = createDialogElements(cfg, defaultDate);
@@ -77,8 +76,7 @@ export function createUI(): void {
     durInp.value = String(latest.duration);
     renderPeriodRows(periodTb, latest);
     refreshPeriodTable(periodTb, latest);
-    renderAlarmRows(alarmTb, latest.alarms);
-    refreshAlarmRows(alarmTb, latest.alarms);
+    renderReminderRuleRows(reminderRuleTb, latest.reminderProgram.rules);
     refreshPreview(previewList, latest);
   };
 
@@ -137,24 +135,23 @@ export function createUI(): void {
     return current;
   }
 
-  function onPeriodChange(): void {
-    const current = persistConfig();
+  function onPeriodChange(current = store.getConfig()): void {
+    saveConfig(current);
     durInp.value = String(current.duration);
     refreshPeriodTable(periodTb, current);
     refreshPreview(previewList, current);
   }
 
-  function onAlarmChange(): void {
-    const current = persistConfig();
-    refreshAlarmRows(alarmTb, current.alarms);
+  function onReminderChange(current = store.getConfig()): void {
+    saveConfig(current);
+    renderReminderRuleRows(reminderRuleTb, current.reminderProgram.rules);
   }
 
   refreshPreview(previewList, store.getConfig());
-  refreshAlarmRows(alarmTb, store.getConfig().alarms);
+  renderReminderRuleRows(reminderRuleTb, store.getConfig().reminderProgram.rules);
 
   durInp.addEventListener("input", () => {
-    store.setDuration(durInp.value);
-    onPeriodChange();
+    onPeriodChange(store.setDuration(durInp.value));
   });
 
   periodTb.addEventListener("input", (event) => {
@@ -162,8 +159,7 @@ export function createUI(): void {
     if (target.matches('[data-role="period-start"]')) {
       const row = target.closest<HTMLTableRowElement>("tr[data-idx]");
       const index = Number.parseInt(row?.dataset.idx ?? "-1", 10);
-      store.setPeriodStart(index, target.value);
-      onPeriodChange();
+      onPeriodChange(store.setPeriodStart(index, target.value));
     }
   });
   periodTb.addEventListener("click", (event) => {
@@ -177,53 +173,73 @@ export function createUI(): void {
     const index = Number.parseInt(row?.dataset.idx ?? "-1", 10);
     const next = store.removePeriod(index);
     renderPeriodRows(periodTb, next);
-    onPeriodChange();
+    onPeriodChange(next);
   });
   addPeriodBtn.addEventListener("click", () => {
     const current = store.getConfig();
     const lastStart = current.periods.at(-1)?.start ?? "08:00";
     const nextStart = addMinutes(lastStart, current.duration + 10);
-    renderPeriodRows(periodTb, store.addPeriod(nextStart));
-    onPeriodChange();
+    const next = store.addPeriod(nextStart);
+    renderPeriodRows(periodTb, next);
+    onPeriodChange(next);
   });
 
-  alarmTb.addEventListener("change", (event) => {
+  reminderRuleTb.addEventListener("change", (event) => {
     const target = event.target as HTMLInputElement | HTMLSelectElement;
-    const row = target.closest<HTMLTableRowElement>("tr[data-alarm-idx]");
-    const index = Number.parseInt(row?.dataset.alarmIdx ?? "-1", 10);
-    if (target.matches('[data-role="alarm-enabled"]')) {
-      store.updateAlarm(index, { enabled: (target as HTMLInputElement).checked });
-      onAlarmChange();
+    const row = target.closest<HTMLTableRowElement>("tr[data-reminder-rule-id]");
+    const ruleId = row?.dataset.reminderRuleId;
+    if (!ruleId) {
+      return;
     }
-    if (target.matches('[data-role="alarm-action"]')) {
-      store.updateAlarm(index, { action: target.value as Config["alarms"][number]["action"] });
-      onAlarmChange();
+    if (target.matches('[data-role="reminder-rule-enabled"]')) {
+      onReminderChange(
+        store.setReminderRuleEnabled(
+          ruleId,
+          (target as HTMLInputElement).checked,
+        ),
+      );
+    }
+    if (target.matches('[data-role="reminder-rule-delivery"]')) {
+      onReminderChange(
+        store.setReminderRuleDelivery(
+          ruleId,
+          target.value as Config["reminderProgram"]["rules"][number]["delivery"]["kind"],
+        ),
+      );
     }
   });
-  alarmTb.addEventListener("input", (event) => {
+  reminderRuleTb.addEventListener("input", (event) => {
     const target = event.target as HTMLInputElement;
-    if (target.matches('[data-role="alarm-minutes"]')) {
-      const row = target.closest<HTMLTableRowElement>("tr[data-alarm-idx]");
-      const index = Number.parseInt(row?.dataset.alarmIdx ?? "-1", 10);
-      store.updateAlarm(index, { minutes: Number.parseInt(target.value, 10) });
-      onAlarmChange();
+    if (target.matches('[data-role="reminder-rule-minutes"]')) {
+      const row = target.closest<HTMLTableRowElement>("tr[data-reminder-rule-id]");
+      const ruleId = row?.dataset.reminderRuleId;
+      if (!ruleId) {
+        return;
+      }
+      onReminderChange(
+        store.setReminderRuleMinutes(
+          ruleId,
+          Number.parseInt(target.value, 10),
+        ),
+      );
     }
   });
-  alarmTb.addEventListener("click", (event) => {
+  reminderRuleTb.addEventListener("click", (event) => {
     const btn = (event.target as Element).closest(
-      '[data-action="delete-alarm"]',
+      '[data-action="delete-reminder-rule"]',
     );
     if (!btn) {
       return;
     }
-    const row = btn.closest<HTMLTableRowElement>("tr[data-alarm-idx]");
-    const index = Number.parseInt(row?.dataset.alarmIdx ?? "-1", 10);
-    renderAlarmRows(alarmTb, store.removeAlarm(index));
-    onAlarmChange();
+    const row = btn.closest<HTMLTableRowElement>("tr[data-reminder-rule-id]");
+    const ruleId = row?.dataset.reminderRuleId;
+    if (!ruleId) {
+      return;
+    }
+    onReminderChange(store.removeReminderRule(ruleId));
   });
-  addAlarmBtn.addEventListener("click", () => {
-    renderAlarmRows(alarmTb, store.addAlarm());
-    onAlarmChange();
+  addReminderRuleBtn.addEventListener("click", () => {
+    onReminderChange(store.addReminderRule());
   });
 
   const statusClassNames = {

@@ -3,30 +3,27 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import {
-  DEFAULT_ALARM_ACTION,
-  DEFAULT_ALARM_MINUTES,
   cloneConfig,
-  normalizeAlarm,
+  createReminderRule,
   normalizeDuration,
   normalizePeriod,
 } from "../../config";
-import type { Alarm, Config } from "../../types";
+import type { Config, ReminderDeliveryKind, ReminderRule } from "../../types";
 import { addMinutes } from "../../utils";
-import { makeAlarmRow, makePeriodRow } from "../builders";
+import { makePeriodRow, makeReminderRuleRow } from "../builders";
 import { styles } from "../css";
 
 export interface DialogConfigStore {
   getConfig(): Config;
-  setDuration(value: number | string): Pick<Config, "duration" | "periods">;
-  setPeriodStart(
-    index: number,
-    start: string,
-  ): Pick<Config, "duration" | "periods">;
-  addPeriod(start: string): Pick<Config, "duration" | "periods">;
-  removePeriod(index: number): Pick<Config, "duration" | "periods">;
-  updateAlarm(index: number, patch: Partial<Alarm>): Alarm[];
-  addAlarm(alarm?: Partial<Alarm>): Alarm[];
-  removeAlarm(index: number): Alarm[];
+  setDuration(value: number | string): Config;
+  setPeriodStart(index: number, start: string): Config;
+  addPeriod(start: string): Config;
+  removePeriod(index: number): Config;
+  setReminderRuleEnabled(ruleId: string, isEnabled: boolean): Config;
+  setReminderRuleMinutes(ruleId: string, minutesBeforeStart: number): Config;
+  setReminderRuleDelivery(ruleId: string, kind: ReminderDeliveryKind): Config;
+  addReminderRule(rule?: Partial<ReminderRule>): Config;
+  removeReminderRule(ruleId: string): Config;
 }
 
 export function createDialogConfigStore(initialConfig: Config): DialogConfigStore {
@@ -37,100 +34,105 @@ export function createDialogConfigStore(initialConfig: Config): DialogConfigStor
       return cloneConfig(config);
     },
 
-    setDuration(value): Pick<Config, "duration" | "periods"> {
+    setDuration(value): Config {
       config.duration = normalizeDuration(value, config.duration);
-      return {
-        duration: config.duration,
-        periods: config.periods.map((period) => ({ ...period })),
-      };
+      return cloneConfig(config);
     },
 
-    setPeriodStart(index, start): Pick<Config, "duration" | "periods"> {
+    setPeriodStart(index, start): Config {
       const current = config.periods[index];
       if (!current) {
-        return {
-          duration: config.duration,
-          periods: config.periods.map((period) => ({ ...period })),
-        };
+        return cloneConfig(config);
       }
 
       config.periods[index] = normalizePeriod({ start }, current.start);
-      return {
-        duration: config.duration,
-        periods: config.periods.map((period) => ({ ...period })),
-      };
+      return cloneConfig(config);
     },
 
-    addPeriod(start): Pick<Config, "duration" | "periods"> {
+    addPeriod(start): Config {
       config.periods.push(normalizePeriod({ start }));
-      return {
-        duration: config.duration,
-        periods: config.periods.map((period) => ({ ...period })),
-      };
+      return cloneConfig(config);
     },
 
-    removePeriod(index): Pick<Config, "duration" | "periods"> {
+    removePeriod(index): Config {
       if (config.periods.length <= 1) {
-        return {
-          duration: config.duration,
-          periods: config.periods.map((period) => ({ ...period })),
-        };
+        return cloneConfig(config);
       }
 
       config.periods.splice(index, 1);
-      return {
-        duration: config.duration,
-        periods: config.periods.map((period) => ({ ...period })),
-      };
+      return cloneConfig(config);
     },
 
-    updateAlarm(index, patch): Alarm[] {
-      const current = config.alarms[index];
-      if (!current) {
-        return config.alarms.map((alarm) => ({ ...alarm }));
+    setReminderRuleEnabled(ruleId, isEnabled): Config {
+      config.reminderProgram.rules = config.reminderProgram.rules.map((rule) =>
+        rule.id === ruleId ? createReminderRule({ ...rule, isEnabled }) : rule,
+      );
+      return cloneConfig(config);
+    },
+
+    setReminderRuleMinutes(ruleId, minutesBeforeStart): Config {
+      config.reminderProgram.rules = config.reminderProgram.rules.map((rule) =>
+        rule.id === ruleId
+          ? createReminderRule({
+              ...rule,
+              offset: { minutesBeforeStart },
+            })
+          : rule,
+      );
+      return cloneConfig(config);
+    },
+
+    setReminderRuleDelivery(ruleId, kind): Config {
+      config.reminderProgram.rules = config.reminderProgram.rules.map((rule) =>
+        rule.id === ruleId
+          ? createReminderRule({
+              ...rule,
+              delivery: { kind },
+            })
+          : rule,
+      );
+      return cloneConfig(config);
+    },
+
+    addReminderRule(rule = {}): Config {
+      config.reminderProgram.rules.push(createReminderRule(rule));
+      return cloneConfig(config);
+    },
+
+    removeReminderRule(ruleId): Config {
+      if (config.reminderProgram.rules.length <= 1) {
+        return cloneConfig(config);
       }
 
-      config.alarms[index] = normalizeAlarm({ ...current, ...patch });
-      return config.alarms.map((alarm) => ({ ...alarm }));
-    },
-
-    addAlarm(alarm = {}): Alarm[] {
-      config.alarms.push(normalizeAlarm(alarm));
-      return config.alarms.map((item) => ({ ...item }));
-    },
-
-    removeAlarm(index): Alarm[] {
-      if (config.alarms.length <= 1) {
-        return config.alarms.map((alarm) => ({ ...alarm }));
-      }
-
-      config.alarms.splice(index, 1);
-      return config.alarms.map((alarm) => ({ ...alarm }));
+      config.reminderProgram.rules = config.reminderProgram.rules.filter(
+        (rule) => rule.id !== ruleId,
+      );
+      return cloneConfig(config);
     },
   };
 }
 
 export function renderPeriodRows(
   periodTb: HTMLTableSectionElement,
-  { periods, duration }: Pick<Config, "duration" | "periods">,
+  { periods, duration }: Config,
 ): void {
   periodTb.replaceChildren(
     ...periods.map((period, index) => makePeriodRow(index, period.start, duration)),
   );
 }
 
-export function renderAlarmRows(
-  alarmTb: HTMLTableSectionElement,
-  alarms: Alarm[],
+export function renderReminderRuleRows(
+  reminderRuleTb: HTMLTableSectionElement,
+  rules: ReminderRule[],
 ): void {
-  alarmTb.replaceChildren(
-    ...alarms.map((alarm, index) => makeAlarmRow(index, alarm)),
+  reminderRuleTb.replaceChildren(
+    ...rules.map((rule, index) => makeReminderRuleRow(index, rule)),
   );
 }
 
 export function refreshPeriodTable(
   periodTb: HTMLTableSectionElement,
-  { periods, duration }: Pick<Config, "duration" | "periods">,
+  { periods, duration }: Config,
 ): void {
   periodTb
     .querySelectorAll<HTMLElement>("tr[data-idx]")
@@ -156,7 +158,7 @@ export function refreshPeriodTable(
 
 export function refreshPreview(
   previewList: HTMLUListElement,
-  { periods, duration }: Pick<Config, "periods" | "duration">,
+  { periods, duration }: Config,
 ): void {
   previewList.replaceChildren(
     ...periods.map((period, index) => {
@@ -177,39 +179,4 @@ export function refreshPreview(
       return li;
     }),
   );
-}
-
-export function refreshAlarmRows(
-  alarmTb: HTMLTableSectionElement,
-  alarms: Alarm[],
-): void {
-  Array.from(alarmTb.rows).forEach((tr, index) => {
-    const alarm = alarms[index] ?? normalizeAlarm({
-      enabled: false,
-      minutes: DEFAULT_ALARM_MINUTES,
-      action: DEFAULT_ALARM_ACTION,
-    });
-    tr.dataset.alarmIdx = String(index);
-    tr.classList.toggle(styles.alarmOff, !alarm.enabled);
-
-    const checkbox = tr.querySelector<HTMLInputElement>('[data-role="alarm-enabled"]');
-    if (checkbox) {
-      checkbox.checked = alarm.enabled;
-    }
-
-    const minutesInput = tr.querySelector<HTMLInputElement>('[data-role="alarm-minutes"]');
-    if (minutesInput && minutesInput.value !== String(alarm.minutes)) {
-      minutesInput.value = String(alarm.minutes);
-    }
-
-    const actionSelect = tr.querySelector<HTMLSelectElement>('[data-role="alarm-action"]');
-    if (actionSelect) {
-      actionSelect.value = alarm.action;
-    }
-
-    const toggleEl = tr.querySelector<HTMLElement>('[data-role="alarm-toggle"]');
-    if (toggleEl) {
-      toggleEl.title = alarm.enabled ? "已启用" : "已禁用";
-    }
-  });
 }
