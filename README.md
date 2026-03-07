@@ -1,6 +1,6 @@
 # USST-Schedule-Sync
 
-将USST教务系统课表导出为标准 `.ics` 日历文件
+将 USST 教务系统课表导出为标准 `.ics` 日历文件。
 
 ## 开发
 
@@ -49,7 +49,7 @@
 
 ## 生效页面
 
-- 当前 userscript 匹配规则为 `*://*/jwglxt/kbcx/*`
+- 当前 userscript 精确匹配页面为 `*://jwgl.usst.edu.cn/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html*`
 - 代码中的课表提取逻辑依赖教务系统课表页面常见元素，例如 `#kblist_table`、`#kbgrid_table_0`、`#tb`、`#xnm`、`#xqm`
 
-如果实际课表页 URL 与上述规则不同，可以继续收窄或调整 [vite.config.ts](vite.config.ts) 中的 `match` 配置。
+如果实际课表页 URL 发生变化，可以调整 [vite.config.ts](vite.config.ts) 中的 `match` 配置。

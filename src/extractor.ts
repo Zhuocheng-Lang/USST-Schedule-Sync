@@ -104,7 +104,10 @@ function extractFromGrid(): Course[] {
         continue;
       }
       const name =
-        titleEl.textContent?.trim().replace(/[★○◆◇●]/g, "").trim() ?? "";
+        titleEl.textContent
+          ?.trim()
+          .replace(/[★○◆◇●]/g, "")
+          .trim() ?? "";
       if (!name) {
         continue;
       }
@@ -115,9 +118,12 @@ function extractFromGrid(): Course[] {
       courses.push({
         name,
         location: locEl
-          ? locEl.parentElement?.textContent?.trim().replace(/\s+/g, " ") ?? ""
+          ? (locEl.parentElement?.textContent?.trim().replace(/\s+/g, " ") ??
+            "")
           : "",
-        teacher: tchrEl ? tchrEl.parentElement?.textContent?.trim() ?? "" : "",
+        teacher: tchrEl
+          ? (tchrEl.parentElement?.textContent?.trim() ?? "")
+          : "",
         dow,
         pStart,
         pEnd,
@@ -142,7 +148,10 @@ function parseCourseCon(
   }
 
   const name =
-    titleEl.textContent?.trim().replace(/[★○◆◇●]/g, "").trim() ?? "";
+    titleEl.textContent
+      ?.trim()
+      .replace(/[★○◆◇●]/g, "")
+      .trim() ?? "";
   if (!name) {
     return null;
   }
@@ -154,7 +163,9 @@ function parseCourseCon(
   let rawWeeks = "";
   let weeks: number[] = [];
 
-  const labelledMatch = pText.match(/周数[：:]\s*([^\s校区上下]+周[（(双单）)]*)/);
+  const labelledMatch = pText.match(
+    /周数[：:]\s*([^\s校区上下]+周[（(双单）)]*)/,
+  );
   if (labelledMatch) {
     rawWeeks = labelledMatch[1]?.trim() ?? "";
     weeks = parseWeeks(rawWeeks);

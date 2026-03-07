@@ -202,7 +202,13 @@ export function createUI(): void {
     style: "margin-top:8px",
     textContent: "配置自动保存，刷新页面后仍然有效",
   });
-  panelSchedule.append(rowDur, scheduleHd, periodTbl, addPeriodBtn, tipSchedule);
+  panelSchedule.append(
+    rowDur,
+    scheduleHd,
+    periodTbl,
+    addPeriodBtn,
+    tipSchedule,
+  );
 
   const panelAlarm = Object.assign(document.createElement("div"), {
     className: "ics-panel",
@@ -290,7 +296,9 @@ export function createUI(): void {
   }
 
   tabBar.addEventListener("click", (event) => {
-    const btn = (event.target as Element).closest(".ics-tab-btn") as HTMLElement | null;
+    const btn = (event.target as Element).closest(
+      ".ics-tab-btn",
+    ) as HTMLElement | null;
     if (!btn) {
       return;
     }
@@ -327,36 +335,37 @@ export function createUI(): void {
     return Array.from(
       alarmTb.querySelectorAll<HTMLElement>("tr[data-alarm-idx]"),
     ).map((tr) => ({
-        enabled: tr.querySelector<HTMLInputElement>(".alarm-enabled")?.checked ?? false,
-        minutes:
-          Math.max(
-            1,
-            parseInt(
-              tr.querySelector<HTMLInputElement>(".alarm-minutes")?.value ?? "15",
-              10,
-            ) || 15,
-          ),
-        action:
-          (tr.querySelector<HTMLSelectElement>(".alarm-action")?.value ??
-            "DISPLAY") as Alarm["action"],
-      }));
+      enabled:
+        tr.querySelector<HTMLInputElement>(".alarm-enabled")?.checked ?? false,
+      minutes: Math.max(
+        1,
+        parseInt(
+          tr.querySelector<HTMLInputElement>(".alarm-minutes")?.value ?? "15",
+          10,
+        ) || 15,
+      ),
+      action: (tr.querySelector<HTMLSelectElement>(".alarm-action")?.value ??
+        "DISPLAY") as Alarm["action"],
+    }));
   }
 
   const readCfg = (): Config => ({ ...readPeriodCfg(), alarms: readAlarms() });
 
   function refreshPeriodTable({ duration }: Pick<Config, "duration">): void {
-    periodTb.querySelectorAll<HTMLElement>("tr[data-idx]").forEach((tr, index) => {
-      tr.dataset.idx = String(index);
-      const noEl = tr.querySelector<HTMLElement>(".tc-no");
-      const endEl = tr.querySelector<HTMLElement>(".tc-end");
-      const startEl = tr.querySelector<HTMLInputElement>(".period-start");
-      if (noEl) {
-        noEl.textContent = String(index + 1);
-      }
-      if (endEl && startEl) {
-        endEl.textContent = "→ " + addMinutes(startEl.value, duration);
-      }
-    });
+    periodTb
+      .querySelectorAll<HTMLElement>("tr[data-idx]")
+      .forEach((tr, index) => {
+        tr.dataset.idx = String(index);
+        const noEl = tr.querySelector<HTMLElement>(".tc-no");
+        const endEl = tr.querySelector<HTMLElement>(".tc-end");
+        const startEl = tr.querySelector<HTMLInputElement>(".period-start");
+        if (noEl) {
+          noEl.textContent = String(index + 1);
+        }
+        if (endEl && startEl) {
+          endEl.textContent = "→ " + addMinutes(startEl.value, duration);
+        }
+      });
   }
 
   function refreshPreview({
@@ -376,15 +385,19 @@ export function createUI(): void {
   }
 
   function refreshAlarmRows(): void {
-    alarmTb.querySelectorAll<HTMLElement>("tr[data-alarm-idx]").forEach((tr, index) => {
-      tr.dataset.alarmIdx = String(index);
-      const enabled = tr.querySelector<HTMLInputElement>(".alarm-enabled")?.checked ?? false;
-      tr.classList.toggle("alarm-off", !enabled);
-      const toggleEl = tr.querySelector<HTMLElement>(".ics-toggle");
-      if (toggleEl) {
-        toggleEl.title = enabled ? "已启用" : "已禁用";
-      }
-    });
+    alarmTb
+      .querySelectorAll<HTMLElement>("tr[data-alarm-idx]")
+      .forEach((tr, index) => {
+        tr.dataset.alarmIdx = String(index);
+        const enabled =
+          tr.querySelector<HTMLInputElement>(".alarm-enabled")?.checked ??
+          false;
+        tr.classList.toggle("alarm-off", !enabled);
+        const toggleEl = tr.querySelector<HTMLElement>(".ics-toggle");
+        if (toggleEl) {
+          toggleEl.title = enabled ? "已启用" : "已禁用";
+        }
+      });
   }
 
   function onPeriodChange(): void {
@@ -509,7 +522,9 @@ export function createUI(): void {
           saveSemStart(semKey, semStart);
         }
 
-        const alarmCount = currentCfg.alarms.filter((alarm) => alarm.enabled).length;
+        const alarmCount = currentCfg.alarms.filter(
+          (alarm) => alarm.enabled,
+        ).length;
         const alarmSummary = alarmCount ? `${alarmCount} 条提醒` : "无提醒";
         setStatus(
           `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,

@@ -2,7 +2,12 @@
 //  storage.ts - 负责与 Tampermonkey 的存储 API 交互，提供类型安全的 get/set 方法
 // ════════════════════════════════════════════════════════════════════════════
 
-import { DEFAULT_ALARMS, DEFAULT_DURATION, NS, defaultConfig } from "./constants";
+import {
+  DEFAULT_ALARMS,
+  DEFAULT_DURATION,
+  NS,
+  defaultConfig,
+} from "./constants";
 import type { Config } from "./types";
 
 function storageGet<T>(key: string, fallback: T): T {

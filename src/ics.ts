@@ -72,7 +72,9 @@ export function generateICS(
       lines.push("BEGIN:VEVENT");
       lines.push(`UID:${uuidV4()}@usst.timetable`);
       lines.push(`DTSTAMP:${dtstamp}`);
-      lines.push(`DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`);
+      lines.push(
+        `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`,
+      );
       lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`);
       lines.push(`SUMMARY:${escapeICSText(course.name)}`);
       lines.push(`LOCATION:${escapeICSText(course.location)}`);
