@@ -1,7 +1,7 @@
 {
   "name": "usst-schedule-sync",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Export USST timetable to standard .ics calendar files",
   "author": "Zhuocheng Lang",
   "license": "MIT",

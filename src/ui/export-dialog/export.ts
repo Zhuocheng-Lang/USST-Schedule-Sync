@@ -50,11 +50,7 @@ export function handleExportAction({
       }
 
       const currentCfg = readConfig();
-      const { ics, eventCount } = generateICS(
-        courses,
-        semStart,
-        currentCfg,
-      );
+      const { ics, eventCount } = generateICS(courses, semStart, currentCfg);
       const filename = `上理工课表_${semStart}.ics`;
 
       downloadICS(ics, filename);
