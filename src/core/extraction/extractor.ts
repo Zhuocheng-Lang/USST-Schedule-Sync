@@ -1,9 +1,9 @@
 // ════════════════════════════════════════════════════════════════════════════
-//  extractor.ts - 从教务系统的 DOM 中提取课程信息
+//  core/extraction/extractor.ts - 从教务系统的 DOM 中提取课程信息
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { Course } from "./types";
-import { parseWeeks } from "./utils";
+import type { Course } from "../../types";
+import { parseWeeks } from "../../utils";
 
 export function extractCourses(): Course[] {
   const listTable = document.querySelector("#kblist_table");

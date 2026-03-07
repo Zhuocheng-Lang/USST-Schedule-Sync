@@ -1,18 +1,18 @@
 // ════════════════════════════════════════════════════════════════════════════
-//  storage.ts - 负责与 Tampermonkey 的存储 API 交互，提供类型安全的 get/set 方法
+//  config/storage.ts - Tampermonkey 存储读写与配置缓存
 // ════════════════════════════════════════════════════════════════════════════
 
 import {
   DEFAULT_ALARMS,
   DEFAULT_DURATION,
-  NS,
+  STORAGE_NAMESPACE,
   defaultConfig,
-} from "./constants";
-import type { Config } from "./types";
+} from "./defaults";
+import type { Config } from "../types";
 
 function storageGet<T>(key: string, fallback: T): T {
   try {
-    const raw = GM_getValue(NS + key, null);
+    const raw = GM_getValue(STORAGE_NAMESPACE + key, null);
     return raw !== null ? (JSON.parse(raw as string) as T) : fallback;
   } catch {
     return fallback;
@@ -21,7 +21,7 @@ function storageGet<T>(key: string, fallback: T): T {
 
 function storageSet(key: string, value: unknown): void {
   try {
-    GM_setValue(NS + key, JSON.stringify(value));
+    GM_setValue(STORAGE_NAMESPACE + key, JSON.stringify(value));
   } catch (error) {
     console.warn("[ICS] storage write failed:", error);
   }

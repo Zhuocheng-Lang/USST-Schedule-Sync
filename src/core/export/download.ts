@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════════════════════
-//  download.ts - 处理文件下载的实用函数
+//  core/export/download.ts - 处理 .ics 文件下载
 // ════════════════════════════════════════════════════════════════════════════
 
 export function downloadICS(content: string, filename: string): void {

@@ -42,7 +42,7 @@
   const DEFAULT_ALARMS = [
     { enabled: true, minutes: 15, action: "DISPLAY" }
   ];
-  const NS = "ics_";
+  const STORAGE_NAMESPACE = "ics_";
   function defaultConfig() {
     return {
       duration: DEFAULT_DURATION,
@@ -50,22 +50,37 @@
       alarms: DEFAULT_ALARMS.map((alarm) => ({ ...alarm }))
     };
   }
-  function downloadICS(content, filename) {
-    const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
+  function storageGet(key, fallback) {
     try {
-      const anchor = Object.assign(document.createElement("a"), {
-        href: url,
-        download: filename
-      });
-      anchor.style.display = "none";
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-    } finally {
-      URL.revokeObjectURL(url);
+      const raw = GM_getValue(STORAGE_NAMESPACE + key, null);
+      return raw !== null ? JSON.parse(raw) : fallback;
+    } catch {
+      return fallback;
     }
   }
+  function storageSet(key, value) {
+    try {
+      GM_setValue(STORAGE_NAMESPACE + key, JSON.stringify(value));
+    } catch (error) {
+      console.warn("[ICS] storage write failed:", error);
+    }
+  }
+  function getConfig() {
+    const saved = storageGet("config", null);
+    if (saved && Array.isArray(saved.periods) && saved.periods.length) {
+      if (!Array.isArray(saved.alarms)) {
+        saved.alarms = DEFAULT_ALARMS.map((alarm) => ({ ...alarm }));
+      }
+      if (typeof saved.duration !== "number") {
+        saved.duration = DEFAULT_DURATION;
+      }
+      return saved;
+    }
+    return defaultConfig();
+  }
+  const saveConfig = (cfg) => storageSet("config", cfg);
+  const getSemStart = (key) => storageGet("semstart_" + key, null);
+  const saveSemStart = (key, value) => storageSet("semstart_" + key, value);
   function addMinutes(hhmm, mins) {
     const [hours, minutes] = hhmm.split(":").map(Number);
     const total = Math.min(
@@ -78,9 +93,6 @@
     const period = periods[no - 1];
     return period ? { start: period.start, end: addMinutes(period.start, duration) } : null;
   }
-  function toICSDateTime(dateISO, hhmm) {
-    return dateISO.replace(/-/g, "") + "T" + hhmm.replace(":", "") + "00";
-  }
   function semesterDate(firstMonday, weekNo, dow) {
     const [year, month, day] = firstMonday.split("-").map(Number);
     const base = new Date(year ?? 0, (month ?? 1) - 1, day ?? 1);
@@ -90,6 +102,35 @@
       String(base.getMonth() + 1).padStart(2, "0"),
       String(base.getDate()).padStart(2, "0")
     ].join("-");
+  }
+  function toICSDateTime(dateISO, hhmm) {
+    return dateISO.replace(/-/g, "") + "T" + hhmm.replace(":", "") + "00";
+  }
+  function escapeICSText(text) {
+    return String(text).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
+  }
+  function foldLine(line) {
+    const encoder = new TextEncoder();
+    if (encoder.encode(line).length <= 75) {
+      return line;
+    }
+    const segments = [];
+    let current = "";
+    let budget = 75;
+    for (const char of line) {
+      const encoded = encoder.encode(char).length;
+      if (encoder.encode(current).length + encoded > budget) {
+        segments.push(current);
+        current = " " + char;
+        budget = 74;
+      } else {
+        current += char;
+      }
+    }
+    if (current) {
+      segments.push(current);
+    }
+    return segments.join("\r\n");
   }
   function uuidV4() {
     const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -120,31 +161,77 @@
     }
     return weeks;
   }
-  function escapeICSText(text) {
-    return String(text).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
-  }
-  function foldLine(line) {
-    const encoder = new TextEncoder();
-    if (encoder.encode(line).length <= 75) {
-      return line;
-    }
-    const segments = [];
-    let current = "";
-    let budget = 75;
-    for (const char of line) {
-      const encoded = encoder.encode(char).length;
-      if (encoder.encode(current).length + encoded > budget) {
-        segments.push(current);
-        current = " " + char;
-        budget = 74;
-      } else {
-        current += char;
+  const VTIMEZONE_SHANGHAI = [
+    "BEGIN:VTIMEZONE",
+    "TZID:Asia/Shanghai",
+    "X-LIC-LOCATION:Asia/Shanghai",
+    "BEGIN:STANDARD",
+    "TZOFFSETFROM:+0800",
+    "TZOFFSETTO:+0800",
+    "TZNAME:CST",
+    "DTSTART:19700101T000000",
+    "END:STANDARD",
+    "END:VTIMEZONE"
+  ].join("\r\n");
+  function generateICS(courses, firstMonday, tzid, cfg) {
+    const dtstamp = ( new Date()).toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
+    const activeAlarms = cfg.alarms.filter((alarm) => alarm.enabled);
+    const lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//USST Timetable Exporter v4//ZF//CN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "X-WR-CALNAME:上理工课表",
+      "X-WR-TIMEZONE:" + tzid,
+      "X-WR-CALDESC:由 USST 课表导出工具生成"
+    ];
+    if (tzid === "Asia/Shanghai") {
+      for (const line of VTIMEZONE_SHANGHAI.split("\r\n")) {
+        lines.push(line);
       }
     }
-    if (current) {
-      segments.push(current);
+    let eventCount = 0;
+    for (const course of courses) {
+      const startPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pStart);
+      const endPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pEnd);
+      if (!startPeriod || !endPeriod) {
+        continue;
+      }
+      for (const week of course.weeks) {
+        const dateStr = semesterDate(firstMonday, week, course.dow);
+        lines.push("BEGIN:VEVENT");
+        lines.push(`UID:${uuidV4()}@usst.timetable`);
+        lines.push(`DTSTAMP:${dtstamp}`);
+        lines.push(
+          `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`
+        );
+        lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`);
+        lines.push(`SUMMARY:${escapeICSText(course.name)}`);
+        lines.push(`LOCATION:${escapeICSText(course.location)}`);
+        lines.push(
+          `DESCRIPTION:${escapeICSText(`教师：${course.teacher}
+第${week}周（${course.rawWeeks}）`)}`
+        );
+        for (const alarm of activeAlarms) {
+          lines.push("BEGIN:VALARM");
+          lines.push(`ACTION:${alarm.action}`);
+          lines.push(`TRIGGER:-PT${alarm.minutes}M`);
+          if (alarm.action === "DISPLAY") {
+            lines.push(
+              `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`
+            );
+          } else {
+            lines.push("ATTACH;VALUE=URI:Basso");
+          }
+          lines.push("END:VALARM");
+        }
+        lines.push("END:VEVENT");
+        eventCount++;
+      }
     }
-    return segments.join("\r\n");
+    lines.push("END:VCALENDAR");
+    return { ics: lines.map(foldLine).join("\r\n"), eventCount };
   }
   function extractCourses() {
     const listTable = document.querySelector("#kblist_table");
@@ -292,109 +379,22 @@
       rawWeeks
     };
   }
-  const VTIMEZONE_SHANGHAI = [
-    "BEGIN:VTIMEZONE",
-    "TZID:Asia/Shanghai",
-    "X-LIC-LOCATION:Asia/Shanghai",
-    "BEGIN:STANDARD",
-    "TZOFFSETFROM:+0800",
-    "TZOFFSETTO:+0800",
-    "TZNAME:CST",
-    "DTSTART:19700101T000000",
-    "END:STANDARD",
-    "END:VTIMEZONE"
-  ].join("\r\n");
-  function generateICS(courses, firstMonday, tzid, cfg) {
-    const dtstamp = ( new Date()).toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
-    const activeAlarms = cfg.alarms.filter((alarm) => alarm.enabled);
-    const lines = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//USST Timetable Exporter v4//ZF//CN",
-      "CALSCALE:GREGORIAN",
-      "METHOD:PUBLISH",
-      "X-WR-CALNAME:上理工课表",
-      "X-WR-TIMEZONE:" + tzid,
-      "X-WR-CALDESC:由 USST 课表导出工具生成"
-    ];
-    if (tzid === "Asia/Shanghai") {
-      for (const line of VTIMEZONE_SHANGHAI.split("\r\n")) {
-        lines.push(line);
-      }
-    }
-    let eventCount = 0;
-    for (const course of courses) {
-      const startPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pStart);
-      const endPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pEnd);
-      if (!startPeriod || !endPeriod) {
-        continue;
-      }
-      for (const week of course.weeks) {
-        const dateStr = semesterDate(firstMonday, week, course.dow);
-        lines.push("BEGIN:VEVENT");
-        lines.push(`UID:${uuidV4()}@usst.timetable`);
-        lines.push(`DTSTAMP:${dtstamp}`);
-        lines.push(
-          `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`
-        );
-        lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`);
-        lines.push(`SUMMARY:${escapeICSText(course.name)}`);
-        lines.push(`LOCATION:${escapeICSText(course.location)}`);
-        lines.push(
-          `DESCRIPTION:${escapeICSText(`教师：${course.teacher}
-第${week}周（${course.rawWeeks}）`)}`
-        );
-        for (const alarm of activeAlarms) {
-          lines.push("BEGIN:VALARM");
-          lines.push(`ACTION:${alarm.action}`);
-          lines.push(`TRIGGER:-PT${alarm.minutes}M`);
-          if (alarm.action === "DISPLAY") {
-            lines.push(
-              `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`
-            );
-          } else {
-            lines.push("ATTACH;VALUE=URI:Basso");
-          }
-          lines.push("END:VALARM");
-        }
-        lines.push("END:VEVENT");
-        eventCount++;
-      }
-    }
-    lines.push("END:VCALENDAR");
-    return { ics: lines.map(foldLine).join("\r\n"), eventCount };
-  }
-  function storageGet(key, fallback) {
+  function downloadICS(content, filename) {
+    const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
     try {
-      const raw = GM_getValue(NS + key, null);
-      return raw !== null ? JSON.parse(raw) : fallback;
-    } catch {
-      return fallback;
+      const anchor = Object.assign(document.createElement("a"), {
+        href: url,
+        download: filename
+      });
+      anchor.style.display = "none";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    } finally {
+      URL.revokeObjectURL(url);
     }
   }
-  function storageSet(key, value) {
-    try {
-      GM_setValue(NS + key, JSON.stringify(value));
-    } catch (error) {
-      console.warn("[ICS] storage write failed:", error);
-    }
-  }
-  function getConfig() {
-    const saved = storageGet("config", null);
-    if (saved && Array.isArray(saved.periods) && saved.periods.length) {
-      if (!Array.isArray(saved.alarms)) {
-        saved.alarms = DEFAULT_ALARMS.map((alarm) => ({ ...alarm }));
-      }
-      if (typeof saved.duration !== "number") {
-        saved.duration = DEFAULT_DURATION;
-      }
-      return saved;
-    }
-    return defaultConfig();
-  }
-  const saveConfig = (cfg) => storageSet("config", cfg);
-  const getSemStart = (key) => storageGet("semstart_" + key, null);
-  const saveSemStart = (key, value) => storageSet("semstart_" + key, value);
   function detectSemesterKey() {
     const xnm = document.getElementById("xnm");
     const xqm = document.getElementById("xqm");
@@ -412,19 +412,19 @@
       return saved;
     }
     const [year, quarter] = key.split("-").map(Number);
-    function nthMonday(targetYear, month0, nth) {
-      const date = new Date(targetYear, month0, 1);
-      while (date.getDay() !== 1) {
-        date.setDate(date.getDate() + 1);
-      }
-      date.setDate(date.getDate() + (nth - 1) * 7);
-      return [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, "0"),
-        String(date.getDate()).padStart(2, "0")
-      ].join("-");
-    }
     return quarter === 1 ? nthMonday(year ?? 0, 8, 1) : nthMonday((year ?? 0) + 1, 1, 3);
+  }
+  function nthMonday(targetYear, month0, nth) {
+    const date = new Date(targetYear, month0, 1);
+    while (date.getDay() !== 1) {
+      date.setDate(date.getDate() + 1);
+    }
+    date.setDate(date.getDate() + (nth - 1) * 7);
+    return [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0")
+    ].join("-");
   }
   const ACTION_LABELS = {
     DISPLAY: "静默通知",
@@ -725,13 +725,7 @@ word-break: break-word;
 .ics-inf { color: #64748b; }
 `;
   const CSS_BUTTON_ONLY = "";
-  function createUI() {
-    if (document.getElementById("ics-dialog")) {
-      return;
-    }
-    const cfg = getConfig();
-    const semKey = detectSemesterKey();
-    const defaultDate = guessSemesterStart(semKey) ?? `${( new Date()).getFullYear()}-02-17`;
+  function createDialogElements(cfg, defaultDate) {
     const styleEl = Object.assign(document.createElement("style"), {
       textContent: CSS
     });
@@ -939,11 +933,180 @@ word-break: break-word;
     footer.append(exportBtn, statusEl);
     dialog.append(header, tabBar, panelsEl, footer);
     document.body.appendChild(dialog);
-    function openDialog() {
+    return {
+      backdrop,
+      dialog,
+      closeBtn,
+      tabBar,
+      panelsEl,
+      startInp,
+      tzSel,
+      previewList,
+      durInp,
+      periodTb,
+      addPeriodBtn,
+      alarmTb,
+      addAlarmBtn,
+      exportBtn,
+      statusEl
+    };
+  }
+  function handleExportAction({
+    semKey,
+    startInp,
+    tzSel,
+    readConfig,
+    setStatus
+  }) {
+    const semStart = startInp.value;
+    const tzid = tzSel.value;
+    if (!semStart) {
+      setStatus("⚠️ 请填写学期开始日期", "ics-err");
+      startInp.focus();
+      return;
+    }
+    const [year, month, day] = semStart.split("-").map(Number);
+    const weekDay = new Date(year ?? 0, (month ?? 1) - 1, day ?? 1).getDay();
+    if (weekDay !== 1) {
+      const dayNames = "日一二三四五六";
+      setStatus(
+        `⚠️ ${semStart} 是星期${dayNames[weekDay]}，请填写周一的日期`,
+        "ics-err"
+      );
+      startInp.focus();
+      return;
+    }
+    setStatus("解析课表中…", "ics-inf");
+    setTimeout(() => {
+      try {
+        const courses = extractCourses();
+        if (!courses.length) {
+          setStatus("⚠️ 未找到课程数据，请先点击「查询」加载课表", "ics-err");
+          return;
+        }
+        const currentCfg = readConfig();
+        const { ics, eventCount } = generateICS(
+          courses,
+          semStart,
+          tzid,
+          currentCfg
+        );
+        const filename = `上理工课表_${semStart}.ics`;
+        downloadICS(ics, filename);
+        if (semKey) {
+          saveSemStart(semKey, semStart);
+        }
+        const alarmCount = currentCfg.alarms.filter(
+          (alarm) => alarm.enabled
+        ).length;
+        const alarmSummary = alarmCount ? `${alarmCount} 条提醒` : "无提醒";
+        setStatus(
+          `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,
+          "ics-ok"
+        );
+      } catch (error) {
+        setStatus(
+          `❌ 导出失败：${error instanceof Error ? error.message : String(error)}`,
+          "ics-err"
+        );
+        console.error("[ICS Exporter]", error);
+      }
+    }, 0);
+  }
+  function readPeriodConfig(durInp, periodTb) {
+    return {
+      duration: Math.max(1, parseInt(durInp.value, 10) || DEFAULT_DURATION),
+      periods: Array.from(
+        periodTb.querySelectorAll("tr[data-idx]")
+      ).map((tr) => ({
+        start: tr.querySelector(".period-start")?.value ?? "08:00"
+      }))
+    };
+  }
+  function readAlarms(alarmTb) {
+    return Array.from(
+      alarmTb.querySelectorAll("tr[data-alarm-idx]")
+    ).map((tr) => ({
+      enabled: tr.querySelector(".alarm-enabled")?.checked ?? false,
+      minutes: Math.max(
+        1,
+        parseInt(
+          tr.querySelector(".alarm-minutes")?.value ?? "15",
+          10
+        ) || 15
+      ),
+      action: tr.querySelector(".alarm-action")?.value ?? "DISPLAY"
+    }));
+  }
+  function readDialogConfig(durInp, periodTb, alarmTb) {
+    return {
+      ...readPeriodConfig(durInp, periodTb),
+      alarms: readAlarms(alarmTb)
+    };
+  }
+  function refreshPeriodTable(periodTb, duration) {
+    periodTb.querySelectorAll("tr[data-idx]").forEach((tr, index) => {
+      tr.dataset.idx = String(index);
+      const noEl = tr.querySelector(".tc-no");
+      const endEl = tr.querySelector(".tc-end");
+      const startEl = tr.querySelector(".period-start");
+      if (noEl) {
+        noEl.textContent = String(index + 1);
+      }
+      if (endEl && startEl) {
+        endEl.textContent = "→ " + addMinutes(startEl.value, duration);
+      }
+    });
+  }
+  function refreshPreview(previewList, { periods, duration }) {
+    previewList.replaceChildren(
+      ...periods.map((period, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="pn">${index + 1}</span><span class="pt">${period.start}</span><span class="pe">→ ${addMinutes(period.start, duration)}</span>`;
+        return li;
+      })
+    );
+  }
+  function refreshAlarmRows(alarmTb) {
+    alarmTb.querySelectorAll("tr[data-alarm-idx]").forEach((tr, index) => {
+      tr.dataset.alarmIdx = String(index);
+      const enabled = tr.querySelector(".alarm-enabled")?.checked ?? false;
+      tr.classList.toggle("alarm-off", !enabled);
+      const toggleEl = tr.querySelector(".ics-toggle");
+      if (toggleEl) {
+        toggleEl.title = enabled ? "已启用" : "已禁用";
+      }
+    });
+  }
+  function createUI() {
+    if (document.getElementById("ics-dialog")) {
+      return;
+    }
+    const cfg = getConfig();
+    const semKey = detectSemesterKey();
+    const defaultDate = guessSemesterStart(semKey) ?? `${( new Date()).getFullYear()}-02-17`;
+    const {
+      backdrop,
+      dialog,
+      closeBtn,
+      tabBar,
+      panelsEl,
+      startInp,
+      tzSel,
+      previewList,
+      durInp,
+      periodTb,
+      addPeriodBtn,
+      alarmTb,
+      addAlarmBtn,
+      exportBtn,
+      statusEl
+    } = createDialogElements(cfg, defaultDate);
+    function openDialog2() {
       backdrop.classList.add("ics-open");
       dialog.classList.add("ics-open");
       dialog.setAttribute("aria-hidden", "false");
-      refreshPreview(readPeriodCfg());
+      refreshPreview(previewList, readPeriodCfg());
       requestAnimationFrame(() => startInp.focus());
     }
     function closeDialog() {
@@ -964,7 +1127,7 @@ word-break: break-word;
     if (triggerBtn) {
       const fresh = triggerBtn.cloneNode(true);
       triggerBtn.replaceWith(fresh);
-      fresh.addEventListener("click", openDialog);
+      fresh.addEventListener("click", openDialog2);
     }
     tabBar.addEventListener("click", (event) => {
       const btn = event.target.closest(
@@ -985,83 +1148,24 @@ word-break: break-word;
         panel.classList.toggle("active", panel.id === `ics-tab-${tabId}`);
       }
       if (tabId === "export") {
-        refreshPreview(readPeriodCfg());
+        refreshPreview(previewList, readPeriodCfg());
       }
     });
     function readPeriodCfg() {
-      return {
-        duration: Math.max(1, parseInt(durInp.value, 10) || DEFAULT_DURATION),
-        periods: Array.from(
-          periodTb.querySelectorAll("tr[data-idx]")
-        ).map((tr) => ({
-          start: tr.querySelector(".period-start")?.value ?? "08:00"
-        }))
-      };
+      return readPeriodConfig(durInp, periodTb);
     }
-    function readAlarms() {
-      return Array.from(
-        alarmTb.querySelectorAll("tr[data-alarm-idx]")
-      ).map((tr) => ({
-        enabled: tr.querySelector(".alarm-enabled")?.checked ?? false,
-        minutes: Math.max(
-          1,
-          parseInt(
-            tr.querySelector(".alarm-minutes")?.value ?? "15",
-            10
-          ) || 15
-        ),
-        action: tr.querySelector(".alarm-action")?.value ?? "DISPLAY"
-      }));
-    }
-    const readCfg = () => ({ ...readPeriodCfg(), alarms: readAlarms() });
-    function refreshPeriodTable({ duration }) {
-      periodTb.querySelectorAll("tr[data-idx]").forEach((tr, index) => {
-        tr.dataset.idx = String(index);
-        const noEl = tr.querySelector(".tc-no");
-        const endEl = tr.querySelector(".tc-end");
-        const startEl = tr.querySelector(".period-start");
-        if (noEl) {
-          noEl.textContent = String(index + 1);
-        }
-        if (endEl && startEl) {
-          endEl.textContent = "→ " + addMinutes(startEl.value, duration);
-        }
-      });
-    }
-    function refreshPreview({
-      periods,
-      duration
-    }) {
-      previewList.replaceChildren(
-        ...periods.map((period, index) => {
-          const li = document.createElement("li");
-          li.innerHTML = `<span class="pn">${index + 1}</span><span class="pt">${period.start}</span><span class="pe">→ ${addMinutes(period.start, duration)}</span>`;
-          return li;
-        })
-      );
-    }
-    function refreshAlarmRows() {
-      alarmTb.querySelectorAll("tr[data-alarm-idx]").forEach((tr, index) => {
-        tr.dataset.alarmIdx = String(index);
-        const enabled = tr.querySelector(".alarm-enabled")?.checked ?? false;
-        tr.classList.toggle("alarm-off", !enabled);
-        const toggleEl = tr.querySelector(".ics-toggle");
-        if (toggleEl) {
-          toggleEl.title = enabled ? "已启用" : "已禁用";
-        }
-      });
-    }
+    const readCfg = () => readDialogConfig(durInp, periodTb, alarmTb);
     function onPeriodChange() {
       const config = readPeriodCfg();
-      refreshPeriodTable(config);
-      refreshPreview(config);
+      refreshPeriodTable(periodTb, config.duration);
+      refreshPreview(previewList, config);
       saveConfig(readCfg());
     }
     function onAlarmChange() {
-      refreshAlarmRows();
+      refreshAlarmRows(alarmTb);
       saveConfig(readCfg());
     }
-    refreshPreview({ periods: cfg.periods, duration: cfg.duration });
+    refreshPreview(previewList, { periods: cfg.periods, duration: cfg.duration });
     durInp.addEventListener("input", onPeriodChange);
     periodTb.addEventListener("input", (event) => {
       if (event.target.classList.contains("period-start")) {
@@ -1117,60 +1221,13 @@ word-break: break-word;
       statusEl.className = className;
     };
     exportBtn.addEventListener("click", () => {
-      const semStart = startInp.value;
-      const tzid = tzSel.value;
-      if (!semStart) {
-        setStatus("⚠️ 请填写学期开始日期", "ics-err");
-        startInp.focus();
-        return;
-      }
-      const [year, month, day] = semStart.split("-").map(Number);
-      const weekDay = new Date(year ?? 0, (month ?? 1) - 1, day ?? 1).getDay();
-      if (weekDay !== 1) {
-        const dayNames = "日一二三四五六";
-        setStatus(
-          `⚠️ ${semStart} 是星期${dayNames[weekDay]}，请填写周一的日期`,
-          "ics-err"
-        );
-        startInp.focus();
-        return;
-      }
-      setStatus("解析课表中…", "ics-inf");
-      setTimeout(() => {
-        try {
-          const courses = extractCourses();
-          if (!courses.length) {
-            setStatus("⚠️ 未找到课程数据，请先点击「查询」加载课表", "ics-err");
-            return;
-          }
-          const currentCfg = readCfg();
-          const { ics, eventCount } = generateICS(
-            courses,
-            semStart,
-            tzid,
-            currentCfg
-          );
-          const filename = `上理工课表_${semStart}.ics`;
-          downloadICS(ics, filename);
-          if (semKey) {
-            saveSemStart(semKey, semStart);
-          }
-          const alarmCount = currentCfg.alarms.filter(
-            (alarm) => alarm.enabled
-          ).length;
-          const alarmSummary = alarmCount ? `${alarmCount} 条提醒` : "无提醒";
-          setStatus(
-            `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,
-            "ics-ok"
-          );
-        } catch (error) {
-          setStatus(
-            `❌ 导出失败：${error instanceof Error ? error.message : String(error)}`,
-            "ics-err"
-          );
-          console.error("[ICS Exporter]", error);
-        }
-      }, 0);
+      handleExportAction({
+        semKey,
+        startInp,
+        tzSel,
+        readConfig: readCfg,
+        setStatus
+      });
     });
   }
   function injectTriggerButton(onClick) {
@@ -1202,6 +1259,10 @@ word-break: break-word;
   function isTimetableReady() {
     return document.querySelector('#kblist_table tbody[id^="xq_"] .timetable_con') !== null || document.querySelector("#kbgrid_table_0 .timetable_con") !== null;
   }
+  function openDialog() {
+    document.getElementById("ics-backdrop")?.classList.add("ics-open");
+    document.getElementById("ics-dialog")?.classList.add("ics-open");
+  }
   function earlyInjectButton() {
     if (!document.getElementById("ics-btn-style")) {
       const style = Object.assign(document.createElement("style"), {
@@ -1216,13 +1277,14 @@ word-break: break-word;
         return;
       }
       createUI();
-      document.getElementById("ics-backdrop")?.classList.add("ics-open");
-      document.getElementById("ics-dialog")?.classList.add("ics-open");
+      openDialog();
     });
   }
-  if (isTimetableReady()) {
-    createUI();
-  } else {
+  function init() {
+    if (isTimetableReady()) {
+      createUI();
+      return;
+    }
     const observer = new MutationObserver(() => {
       if (document.getElementById("tb") && !document.getElementById("ics-trigger-btn")) {
         earlyInjectButton();
@@ -1237,5 +1299,6 @@ word-break: break-word;
       earlyInjectButton();
     }
   }
+  init();
 
 })();

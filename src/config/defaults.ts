@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════════════════════
-//  constants.ts - 定义默认的课程时间段、持续时间和提醒设置
+//  config/defaults.ts - 默认配置与存储命名空间
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { Alarm, Config, Period } from "./types";
+import type { Alarm, Config, Period } from "../types";
 
 export const DEFAULT_PERIODS: Period[] = [
   { start: "08:00" },
@@ -25,7 +25,7 @@ export const DEFAULT_ALARMS: Alarm[] = [
   { enabled: true, minutes: 15, action: "DISPLAY" },
 ];
 
-export const NS = "ics_";
+export const STORAGE_NAMESPACE = "ics_";
 
 export function defaultConfig(): Config {
   return {

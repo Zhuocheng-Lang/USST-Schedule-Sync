@@ -1,8 +1,8 @@
 // ════════════════════════════════════════════════════════════════════════════
-//  ics.ts - 生成 iCalendar (.ics) 文件的核心逻辑
+//  core/calendar/ics.ts - 生成 iCalendar (.ics) 文件的核心逻辑
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { Config, Course } from "./types";
+import type { Config, Course } from "../../types";
 import {
   escapeICSText,
   foldLine,
@@ -10,7 +10,7 @@ import {
   semesterDate,
   toICSDateTime,
   uuidV4,
-} from "./utils";
+} from "../../utils";
 
 const VTIMEZONE_SHANGHAI = [
   "BEGIN:VTIMEZONE",
