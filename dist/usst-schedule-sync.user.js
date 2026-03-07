@@ -2,7 +2,7 @@
 // @name               USST Schedule Sync
 // @name:zh-CN         USST 课表同步
 // @namespace          https://github.com/Zhuocheng-Lang/USST-Schedule-Sync
-// @version            1.0.2
+// @version            1.0.3
 // @author             Zhuocheng Lang
 // @description        Export USST timetable to standard .ics calendar files
 // @description:zh-CN  将 USST 教务系统课表导出为标准 `.ics` 日历文件
