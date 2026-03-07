@@ -32,10 +32,11 @@ export interface ICSResult {
   eventCount: number;
 }
 
+const TZID = "Asia/Shanghai";
+
 export function generateICS(
   courses: Course[],
   firstMonday: string,
-  tzid: string,
   cfg: Config,
 ): ICSResult {
   const dtstamp =
@@ -49,14 +50,12 @@ export function generateICS(
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "X-WR-CALNAME:上理工课表",
-    "X-WR-TIMEZONE:" + tzid,
+    "X-WR-TIMEZONE:" + TZID,
     "X-WR-CALDESC:由 USST 课表导出工具生成",
   ];
 
-  if (tzid === "Asia/Shanghai") {
-    for (const line of VTIMEZONE_SHANGHAI.split("\r\n")) {
-      lines.push(line);
-    }
+  for (const line of VTIMEZONE_SHANGHAI.split("\r\n")) {
+    lines.push(line);
   }
 
   let eventCount = 0;
@@ -84,9 +83,9 @@ export function generateICS(
     lines.push(`UID:${uuidV4()}@usst.timetable`);
     lines.push(`DTSTAMP:${dtstamp}`);
     lines.push(
-      `DTSTART;TZID=${tzid}:${toICSDateTime(firstDate, startPeriod.start)}`,
+      `DTSTART;TZID=${TZID}:${toICSDateTime(firstDate, startPeriod.start)}`,
     );
-    lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(firstDate, endPeriod.end)}`);
+    lines.push(`DTEND;TZID=${TZID}:${toICSDateTime(firstDate, endPeriod.end)}`);
     lines.push(`SUMMARY:${escapeICSText(course.name)}`);
     lines.push(`LOCATION:${escapeICSText(course.location)}`);
     lines.push(`DESCRIPTION:${escapeICSText(descriptionParts.join("\n"))}`);
@@ -102,7 +101,7 @@ export function generateICS(
         semesterDate(firstMonday, week, course.dow),
       );
       lines.push(
-        `EXDATE;TZID=${tzid}:${toICSDateTimeList(exdateList, startPeriod.start)}`,
+        `EXDATE;TZID=${TZID}:${toICSDateTimeList(exdateList, startPeriod.start)}`,
       );
     }
 

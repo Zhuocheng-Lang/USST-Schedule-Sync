@@ -9,7 +9,6 @@ import type { Config } from "../../types";
 interface ExportActionOptions {
   semKey: string | null;
   startInp: HTMLInputElement;
-  tzSel: HTMLSelectElement;
   readConfig: () => Config;
   setStatus: (message: string, tone: "ok" | "error" | "info") => void;
 }
@@ -17,12 +16,10 @@ interface ExportActionOptions {
 export function handleExportAction({
   semKey,
   startInp,
-  tzSel,
   readConfig,
   setStatus,
 }: ExportActionOptions): void {
   const semStart = startInp.value;
-  const tzid = tzSel.value;
 
   if (!semStart) {
     setStatus("⚠️ 请填写学期开始日期", "error");
@@ -56,7 +53,6 @@ export function handleExportAction({
       const { ics, eventCount } = generateICS(
         courses,
         semStart,
-        tzid,
         currentCfg,
       );
       const filename = `上理工课表_${semStart}.ics`;

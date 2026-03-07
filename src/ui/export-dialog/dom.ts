@@ -62,7 +62,6 @@ export interface DialogElements {
   tabBar: HTMLDivElement;
   panelsEl: HTMLDivElement;
   startInp: HTMLInputElement;
-  tzSel: HTMLSelectElement;
   previewList: HTMLUListElement;
   durInp: HTMLInputElement;
   periodTb: HTMLTableSectionElement;
@@ -186,33 +185,7 @@ export function createDialogElements(
   });
   rowDate.append(lblDate, startInp, tipDate);
 
-  const rowTz = document.createElement("div");
-  rowTz.className = styles.row;
-  const lblTz = Object.assign(document.createElement("div"), {
-    className: styles.label,
-    textContent: "时区",
-  });
-  const tzSel = Object.assign(document.createElement("select"), {
-    id: "ics-tzid",
-    className: styles.field,
-  });
-  for (const [value, label] of [
-    ["Asia/Shanghai", "北京时间 (CST +8)"],
-    ["Asia/Hong_Kong", "香港 (HKT +8)"],
-    ["Asia/Taipei", "台北 (CST +8)"],
-  ] as const) {
-    const option = Object.assign(document.createElement("option"), {
-      value,
-      textContent: label,
-    });
-    if (value === "Asia/Shanghai") {
-      option.selected = true;
-    }
-    tzSel.appendChild(option);
-  }
-  rowTz.append(lblTz, tzSel);
-
-  twoCol.append(rowDate, rowTz);
+  twoCol.append(rowDate);
 
   const previewHd = Object.assign(document.createElement("div"), {
     className: styles.sectionHeading,
@@ -344,7 +317,6 @@ export function createDialogElements(
     tabBar,
     panelsEl,
     startInp,
-    tzSel,
     previewList,
     durInp,
     periodTb,

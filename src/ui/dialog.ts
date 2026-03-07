@@ -34,7 +34,6 @@ export function createUI(): void {
     tabBar,
     panelsEl,
     startInp,
-    tzSel,
     previewList,
     durInp,
     periodTb,
@@ -203,7 +202,6 @@ export function createUI(): void {
     handleExportAction({
       semKey,
       startInp,
-      tzSel,
       readConfig: readCfg,
       setStatus,
     });
