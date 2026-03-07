@@ -47,7 +47,7 @@ const repoUrl =
   normalizeRepositoryUrl(packageMetadata.repository);
 const supportUrl = resolveSupportUrl(packageMetadata.bugs, repoUrl);
 const releaseAssetName = `${packageMetadata.name}.user.js`;
-const releaseAssetUrl = `${repoUrl}/releases/latest/download/${releaseAssetName}`;
+const releaseAssetUrl = `${repoUrl}/blob/main/dist/${releaseAssetName}`;
 
 export default defineConfig({
   plugins: [

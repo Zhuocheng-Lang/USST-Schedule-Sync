@@ -12,8 +12,8 @@
 // @homepageURL        https://github.com/Zhuocheng-Lang/USST-Schedule-Sync
 // @source             https://github.com/Zhuocheng-Lang/USST-Schedule-Sync.git
 // @supportURL         https://github.com/Zhuocheng-Lang/USST-Schedule-Sync/issues
-// @downloadURL        https://github.com/Zhuocheng-Lang/USST-Schedule-Sync/releases/latest/download/usst-schedule-sync.user.js
-// @updateURL          https://github.com/Zhuocheng-Lang/USST-Schedule-Sync/releases/latest/download/usst-schedule-sync.user.js
+// @downloadURL        https://github.com/Zhuocheng-Lang/USST-Schedule-Sync/blob/main/dist/usst-schedule-sync.user.js
+// @updateURL          https://github.com/Zhuocheng-Lang/USST-Schedule-Sync/blob/main/dist/usst-schedule-sync.user.js
 // @match              *://jwgl.usst.edu.cn/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html*
 // @grant              GM_getValue
 // @grant              GM_setValue
