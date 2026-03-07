@@ -1,12 +1,16 @@
 // ==UserScript==
-// @name         USST Schedule Sync
-// @namespace    https://github.com/Zhuocheng-Lang/USST-Schedule-Sync
-// @version      1.0.0
-// @description  将 USST 教务系统课表导出为标准 .ics 日历文件
-// @icon         https://www.usst.edu.cn/_upload/tpl/00/40/64/template64/favicon.ico
-// @match        *://jwgl.usst.edu.cn/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html*
-// @grant        GM_getValue
-// @grant        GM_setValue
+// @name               USST Schedule Sync
+// @name:zh-CN         USST 课表同步
+// @namespace          https://github.com/Zhuocheng-Lang/USST-Schedule-Sync
+// @version            1.0.0
+// @author             Zhuocheng Lang
+// @description        Export USST timetable to standard `.ics` calendar file
+// @description:zh-CN  将 USST 教务系统课表导出为标准 `.ics` 日历文件
+// @license            MIT
+// @icon               https://www.usst.edu.cn/_upload/tpl/00/40/64/template64/favicon.ico
+// @match              *://jwgl.usst.edu.cn/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html*
+// @grant              GM_getValue
+// @grant              GM_setValue
 // ==/UserScript==
 
 (function () {
