@@ -3,6 +3,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import type { Alarm, Config, Period } from "../types";
+import { cloneAlarm, clonePeriod } from "./model";
 
 export const DEFAULT_PERIODS: Period[] = [
   { start: "08:00" },
@@ -30,7 +31,7 @@ export const STORAGE_NAMESPACE = "ics_";
 export function defaultConfig(): Config {
   return {
     duration: DEFAULT_DURATION,
-    periods: DEFAULT_PERIODS.map((period) => ({ ...period })),
-    alarms: DEFAULT_ALARMS.map((alarm) => ({ ...alarm })),
+    periods: DEFAULT_PERIODS.map(clonePeriod),
+    alarms: DEFAULT_ALARMS.map(cloneAlarm),
   };
 }

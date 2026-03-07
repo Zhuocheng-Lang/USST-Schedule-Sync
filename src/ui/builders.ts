@@ -2,14 +2,10 @@
 //  ui/builders.ts - 构建课程表和提醒规则的 DOM 元素
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { Alarm, AlarmAction } from "../types";
+import { ALARM_ACTION_LABELS } from "../config";
+import type { Alarm } from "../types";
 import { addMinutes } from "../utils";
 import { cx, styles } from "./css";
-
-export const ACTION_LABELS: Record<AlarmAction, string> = {
-  DISPLAY: "静默通知",
-  AUDIO: "响铃提醒",
-} as const;
 
 export function makePeriodRow(
   index: number,
@@ -95,7 +91,7 @@ export function makeAlarmRow(index: number, alarm: Alarm): HTMLTableRowElement {
     className: styles.miniSelect,
   });
   select.dataset.role = "alarm-action";
-  for (const [value, label] of Object.entries(ACTION_LABELS)) {
+  for (const [value, label] of Object.entries(ALARM_ACTION_LABELS)) {
     const option = Object.assign(document.createElement("option"), {
       value,
       textContent: label,

@@ -5,18 +5,12 @@
 import {
   DEFAULT_ALARMS,
   DEFAULT_DURATION,
+  DEFAULT_PERIODS,
   STORAGE_NAMESPACE,
   defaultConfig,
 } from "./defaults";
-import type { Alarm, Config } from "../types";
-
-function normalizeAlarm(alarm: Partial<Alarm> | null | undefined): Alarm {
-  return {
-    enabled: alarm?.enabled ?? true,
-    minutes: Math.max(1, Number.parseInt(String(alarm?.minutes ?? 15), 10) || 15),
-    action: alarm?.action === "AUDIO" ? "AUDIO" : "DISPLAY",
-  };
-}
+import { cloneConfig, normalizeAlarms, normalizeDuration, normalizePeriods } from "./model";
+import type { Config } from "../types";
 
 function storageGet<T>(key: string, fallback: T): T {
   try {
@@ -37,19 +31,19 @@ function storageSet(key: string, value: unknown): void {
 
 export function getConfig(): Config {
   const saved = storageGet<Config | null>("config", null);
-  if (saved && Array.isArray(saved.periods) && saved.periods.length) {
-    saved.alarms = Array.isArray(saved.alarms) && saved.alarms.length
-      ? saved.alarms.map((alarm) => normalizeAlarm(alarm))
-      : DEFAULT_ALARMS.map((alarm) => ({ ...alarm }));
-    if (typeof saved.duration !== "number") {
-      saved.duration = DEFAULT_DURATION;
-    }
-    return saved;
+  if (saved) {
+    return {
+      duration: normalizeDuration(saved.duration, DEFAULT_DURATION),
+      periods: normalizePeriods(saved.periods, DEFAULT_PERIODS),
+      alarms: normalizeAlarms(saved.alarms, DEFAULT_ALARMS),
+    };
   }
+
   return defaultConfig();
 }
 
-export const saveConfig = (cfg: Config): void => storageSet("config", cfg);
+export const saveConfig = (cfg: Config): void =>
+  storageSet("config", cloneConfig(cfg));
 
 export const getSemStart = (key: string): string | null =>
   storageGet<string | null>("semstart_" + key, null);

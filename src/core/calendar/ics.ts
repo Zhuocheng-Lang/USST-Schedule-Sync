@@ -3,7 +3,6 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import type { Config, Course } from "../../types";
-import { DEFAULT_ALARMS } from "../../config/defaults";
 import {
   analyzeWeekPattern,
   escapeICSText,
@@ -14,6 +13,7 @@ import {
   toICSDateTime,
   toICSDateTimeList,
 } from "../../utils";
+import { buildAlarmLines } from "./valarm";
 
 const VTIMEZONE_SHANGHAI = [
   "BEGIN:VTIMEZONE",
@@ -36,31 +36,6 @@ export interface ICSResult {
 const TZID = "Asia/Shanghai";
 const PRODID = "-//Zhuocheng Lang//USST Schedule Sync//CN";
 const WEEK_LABEL_PATTERN = /周次[：:]\s*(.+)$/;
-
-function toAlarmTrigger(minutesBeforeStart: number): string {
-  let remainingMinutes = Math.max(1, Math.floor(minutesBeforeStart));
-  const minutesPerDay = 24 * 60;
-  const days = Math.floor(remainingMinutes / minutesPerDay);
-  remainingMinutes %= minutesPerDay;
-  const hours = Math.floor(remainingMinutes / 60);
-  const minutes = remainingMinutes % 60;
-
-  let duration = "-P";
-  if (days) {
-    duration += `${days}D`;
-  }
-  if (hours || minutes || !days) {
-    duration += "T";
-    if (hours) {
-      duration += `${hours}H`;
-    }
-    if (minutes || (!days && !hours)) {
-      duration += `${minutes}M`;
-    }
-  }
-
-  return duration;
-}
 
 function buildEventUid(
   course: Course,
@@ -145,10 +120,6 @@ export function generateICS(
 ): ICSResult {
   const dtstamp =
     new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
-  const alarms = cfg.alarms.length
-    ? cfg.alarms
-    : DEFAULT_ALARMS.map((alarm) => ({ ...alarm }));
-  const activeAlarms = alarms.filter((alarm) => alarm.enabled);
 
   const lines: string[] = [
     "BEGIN:VCALENDAR",
@@ -212,17 +183,7 @@ export function generateICS(
       );
     }
 
-    for (const alarm of activeAlarms) {
-      lines.push("BEGIN:VALARM");
-      lines.push(`ACTION:${alarm.action}`);
-      lines.push(`TRIGGER;RELATED=START:${toAlarmTrigger(alarm.minutes)}`);
-      if (alarm.action === "DISPLAY") {
-        lines.push(
-          `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`,
-        );
-      }
-      lines.push("END:VALARM");
-    }
+    lines.push(...buildAlarmLines(course.name, cfg.alarms));
 
     lines.push("END:VEVENT");
     eventCount++;

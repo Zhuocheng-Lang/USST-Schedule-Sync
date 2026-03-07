@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { defaultConfig } from "../../src/config/defaults";
 import { generateICS } from "../../src/core/calendar/ics";
+import { toAlarmTrigger } from "../../src/core/calendar/valarm";
 import type { Config, Course } from "../../src/types";
 
 const baseCourse: Course = {
@@ -40,6 +41,14 @@ describe("generateICS alarms", () => {
     expect(ics).toContain("ACTION:AUDIO");
     expect(ics).toContain("TRIGGER;RELATED=START:-P1DT2H5M");
     expect(ics).not.toContain("ATTACH;VALUE=URI:Basso");
+  });
+
+  it("formats trigger durations across minute boundaries", () => {
+    expect(toAlarmTrigger(1)).toBe("-PT1M");
+    expect(toAlarmTrigger(59)).toBe("-PT59M");
+    expect(toAlarmTrigger(60)).toBe("-PT1H");
+    expect(toAlarmTrigger(1440)).toBe("-P1D");
+    expect(toAlarmTrigger(1441)).toBe("-P1DT1M");
   });
 
   it("keeps UID stable across repeated exports of the same course", () => {
@@ -121,14 +130,28 @@ describe("generateICS alarms", () => {
     expect(ics).toContain("BEGIN:VALARM");
   });
 
-  it("falls back to the default reminder when runtime config contains no alarm rows", () => {
+  it("omits VALARM blocks when runtime config contains no alarm rows", () => {
     const { ics } = generateICS(
       [baseCourse],
       "2026-03-02",
       makeConfig({ alarms: [] }),
     );
 
-    expect(ics).toContain("BEGIN:VALARM");
-    expect(ics).toContain("TRIGGER;RELATED=START:-PT15M");
+    expect(ics).not.toContain("BEGIN:VALARM");
+  });
+
+  it("omits disabled reminders from exported events", () => {
+    const { ics } = generateICS(
+      [baseCourse],
+      "2026-03-02",
+      makeConfig({
+        alarms: [
+          { enabled: false, minutes: 15, action: "DISPLAY" },
+          { enabled: false, minutes: 30, action: "AUDIO" },
+        ],
+      }),
+    );
+
+    expect(ics).not.toContain("BEGIN:VALARM");
   });
 });

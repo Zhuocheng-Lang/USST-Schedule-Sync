@@ -6,13 +6,13 @@ import { getConfig, saveConfig } from "../config";
 import { detectSemesterKey, guessSemesterStart } from "../core";
 import type { Config } from "../types";
 import { addMinutes } from "../utils";
-import { makeAlarmRow, makePeriodRow } from "./builders";
 import { cx, styles } from "./css";
 import { createDialogElements } from "./export-dialog/dom";
 import { handleExportAction } from "./export-dialog/export";
 import {
-  readDialogConfig,
-  readPeriodConfig,
+  createDialogConfigStore,
+  renderAlarmRows,
+  renderPeriodRows,
   refreshAlarmRows,
   refreshPeriodTable,
   refreshPreview,
@@ -66,12 +66,13 @@ export function createUI(): void {
     exportBtn,
     statusEl,
   } = createDialogElements(cfg, defaultDate);
+  const store = createDialogConfigStore(cfg);
 
   function openDialog(): void {
     backdrop.classList.add(styles.dialogOpen);
     dialog.classList.add(styles.dialogOpen);
     dialog.setAttribute("aria-hidden", "false");
-    refreshPreview(previewList, readPeriodCfg());
+    refreshPreview(previewList, store.getConfig());
     requestAnimationFrame(() => startInp.focus());
   }
 
@@ -116,35 +117,42 @@ export function createUI(): void {
 
     setActiveTab(tabBar, panelsEl, tabId);
     if (tabId === "export") {
-      refreshPreview(previewList, readPeriodCfg());
+      refreshPreview(previewList, store.getConfig());
     }
   });
 
-  function readPeriodCfg(): Pick<Config, "duration" | "periods"> {
-    return readPeriodConfig(durInp, periodTb);
+  function persistConfig(): Config {
+    const current = store.getConfig();
+    saveConfig(current);
+    return current;
   }
 
-  const readCfg = (): Config => readDialogConfig(durInp, periodTb, alarmTb);
-
   function onPeriodChange(): void {
-    const config = readPeriodCfg();
-    refreshPeriodTable(periodTb, config.duration);
-    refreshPreview(previewList, config);
-    saveConfig(readCfg());
+    const current = persistConfig();
+    durInp.value = String(current.duration);
+    refreshPeriodTable(periodTb, current);
+    refreshPreview(previewList, current);
   }
 
   function onAlarmChange(): void {
-    refreshAlarmRows(alarmTb);
-    saveConfig(readCfg());
+    const current = persistConfig();
+    refreshAlarmRows(alarmTb, current.alarms);
   }
 
-  refreshPreview(previewList, { periods: cfg.periods, duration: cfg.duration });
-  refreshAlarmRows(alarmTb);
+  refreshPreview(previewList, store.getConfig());
+  refreshAlarmRows(alarmTb, store.getConfig().alarms);
 
-  durInp.addEventListener("input", onPeriodChange);
+  durInp.addEventListener("input", () => {
+    store.setDuration(durInp.value);
+    onPeriodChange();
+  });
 
   periodTb.addEventListener("input", (event) => {
-    if ((event.target as Element).matches('[data-role="period-start"]')) {
+    const target = event.target as HTMLInputElement;
+    if (target.matches('[data-role="period-start"]')) {
+      const row = target.closest<HTMLTableRowElement>("tr[data-idx]");
+      const index = Number.parseInt(row?.dataset.idx ?? "-1", 10);
+      store.setPeriodStart(index, target.value);
       onPeriodChange();
     }
   });
@@ -155,31 +163,39 @@ export function createUI(): void {
     if (!btn) {
       return;
     }
-    if (periodTb.querySelectorAll("tr").length <= 1) {
-      return;
-    }
-    btn.closest("tr")?.remove();
+    const row = btn.closest<HTMLTableRowElement>("tr[data-idx]");
+    const index = Number.parseInt(row?.dataset.idx ?? "-1", 10);
+    const next = store.removePeriod(index);
+    renderPeriodRows(periodTb, next);
     onPeriodChange();
   });
   addPeriodBtn.addEventListener("click", () => {
-    const { duration, periods } = readPeriodCfg();
-    const lastStart = periods.at(-1)?.start ?? "08:00";
-    const nextStart = addMinutes(lastStart, duration + 10);
-    periodTb.appendChild(makePeriodRow(periods.length, nextStart, duration));
+    const current = store.getConfig();
+    const lastStart = current.periods.at(-1)?.start ?? "08:00";
+    const nextStart = addMinutes(lastStart, current.duration + 10);
+    renderPeriodRows(periodTb, store.addPeriod(nextStart));
     onPeriodChange();
   });
 
   alarmTb.addEventListener("change", (event) => {
-    const target = event.target as Element;
-    if (
-      target.matches('[data-role="alarm-enabled"]') ||
-      target.matches('[data-role="alarm-action"]')
-    ) {
+    const target = event.target as HTMLInputElement | HTMLSelectElement;
+    const row = target.closest<HTMLTableRowElement>("tr[data-alarm-idx]");
+    const index = Number.parseInt(row?.dataset.alarmIdx ?? "-1", 10);
+    if (target.matches('[data-role="alarm-enabled"]')) {
+      store.updateAlarm(index, { enabled: (target as HTMLInputElement).checked });
+      onAlarmChange();
+    }
+    if (target.matches('[data-role="alarm-action"]')) {
+      store.updateAlarm(index, { action: target.value as Config["alarms"][number]["action"] });
       onAlarmChange();
     }
   });
   alarmTb.addEventListener("input", (event) => {
-    if ((event.target as Element).matches('[data-role="alarm-minutes"]')) {
+    const target = event.target as HTMLInputElement;
+    if (target.matches('[data-role="alarm-minutes"]')) {
+      const row = target.closest<HTMLTableRowElement>("tr[data-alarm-idx]");
+      const index = Number.parseInt(row?.dataset.alarmIdx ?? "-1", 10);
+      store.updateAlarm(index, { minutes: Number.parseInt(target.value, 10) });
       onAlarmChange();
     }
   });
@@ -190,17 +206,13 @@ export function createUI(): void {
     if (!btn) {
       return;
     }
-    if (alarmTb.querySelectorAll("tr").length <= 1) {
-      return;
-    }
-    btn.closest("tr")?.remove();
+    const row = btn.closest<HTMLTableRowElement>("tr[data-alarm-idx]");
+    const index = Number.parseInt(row?.dataset.alarmIdx ?? "-1", 10);
+    renderAlarmRows(alarmTb, store.removeAlarm(index));
     onAlarmChange();
   });
   addAlarmBtn.addEventListener("click", () => {
-    const index = alarmTb.querySelectorAll("tr").length;
-    alarmTb.appendChild(
-      makeAlarmRow(index, { enabled: true, minutes: 15, action: "DISPLAY" }),
-    );
+    renderAlarmRows(alarmTb, store.addAlarm());
     onAlarmChange();
   });
 
@@ -219,8 +231,7 @@ export function createUI(): void {
   };
 
   exportBtn.addEventListener("click", () => {
-    const currentCfg = readCfg();
-    saveConfig(currentCfg);
+    const currentCfg = persistConfig();
     handleExportAction({
       semKey,
       startInp,
