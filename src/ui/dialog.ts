@@ -18,6 +18,8 @@ import {
   refreshPreview,
 } from "./export-dialog/state";
 
+let syncExistingUI: (() => void) | null = null;
+
 export function setActiveTab(
   tabBar: HTMLDivElement,
   panelsEl: HTMLDivElement,
@@ -43,6 +45,7 @@ export function setActiveTab(
 
 export function createUI(): void {
   if (document.getElementById("ics-dialog")) {
+    syncExistingUI?.();
     return;
   }
 
@@ -66,9 +69,21 @@ export function createUI(): void {
     exportBtn,
     statusEl,
   } = createDialogElements(cfg, defaultDate);
-  const store = createDialogConfigStore(cfg);
+  let store = createDialogConfigStore(cfg);
+
+  syncExistingUI = (): void => {
+    const latest = getConfig();
+    store = createDialogConfigStore(latest);
+    durInp.value = String(latest.duration);
+    renderPeriodRows(periodTb, latest);
+    refreshPeriodTable(periodTb, latest);
+    renderAlarmRows(alarmTb, latest.alarms);
+    refreshAlarmRows(alarmTb, latest.alarms);
+    refreshPreview(previewList, latest);
+  };
 
   function openDialog(): void {
+    syncExistingUI?.();
     backdrop.classList.add(styles.dialogOpen);
     dialog.classList.add(styles.dialogOpen);
     dialog.setAttribute("aria-hidden", "false");
@@ -95,12 +110,7 @@ export function createUI(): void {
     }
   });
 
-  const triggerBtn = document.getElementById("ics-trigger-btn");
-  if (triggerBtn) {
-    const fresh = triggerBtn.cloneNode(true) as HTMLElement;
-    triggerBtn.replaceWith(fresh);
-    fresh.addEventListener("click", openDialog);
-  }
+  document.getElementById("ics-trigger-btn")?.addEventListener("click", openDialog);
 
   tabBar.addEventListener("click", (event) => {
     const btn = (event.target as Element).closest(

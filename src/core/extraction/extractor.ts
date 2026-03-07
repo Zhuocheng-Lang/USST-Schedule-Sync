@@ -3,7 +3,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import type { Course } from "../../types";
-import { parseWeeks } from "../../utils";
+import { normalizeText, parseWeeks } from "../../utils";
 
 type ExtractedCourse = Course;
 
@@ -112,18 +112,11 @@ function extractFromGrid(): ExtractedCourse[] {
 function getParagraphTextByIcon(con: Element, selector: string): string {
   const icon = con.querySelector(selector);
   const text = icon?.closest("p")?.textContent ?? "";
-  return normalizeTextField(text);
-}
-
-function normalizeTextField(text: string): string {
-  return text
-    .replace(/\u00a0/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return normalizeText(text);
 }
 
 function cleanLocationText(text: string): string {
-  return normalizeTextField(text)
+  return normalizeText(text)
     .replace(/^上课地点\s*[：:]\s*/, "")
     .replace(TRAILING_DETAIL_PATTERN, "")
     .replace(/校区(?=[^\s])/g, "校区 ")
@@ -131,7 +124,7 @@ function cleanLocationText(text: string): string {
 }
 
 function cleanTeacherText(text: string, rawWeeks: string): string {
-  let normalized = normalizeTextField(text)
+  let normalized = normalizeText(text)
     .replace(/^教师\s*[：:]\s*/, "")
     .replace(TRAILING_DETAIL_PATTERN, "")
     .trim();

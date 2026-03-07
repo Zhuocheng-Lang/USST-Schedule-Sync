@@ -18,24 +18,28 @@ export function escapeICSText(text: string): string {
     .replace(/\r\n|\r|\n/g, "\\n");
 }
 
+const _encoder = new TextEncoder();
+
 export function foldLine(line: string): string {
-  const encoder = new TextEncoder();
-  if (encoder.encode(line).length <= 75) {
+  if (_encoder.encode(line).length <= 75) {
     return line;
   }
 
   const segments: string[] = [];
   let current = "";
+  let currentBytes = 0;
   let budget = 75;
 
   for (const char of line) {
-    const encoded = encoder.encode(char).length;
-    if (encoder.encode(current).length + encoded > budget) {
+    const charBytes = _encoder.encode(char).length;
+    if (currentBytes + charBytes > budget) {
       segments.push(current);
       current = " " + char;
+      currentBytes = 1 + charBytes;
       budget = 74;
     } else {
       current += char;
+      currentBytes += charBytes;
     }
   }
   if (current) {

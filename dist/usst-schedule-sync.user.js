@@ -165,22 +165,25 @@
   function escapeICSText(text) {
     return String(text).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
   }
+  const _encoder = new TextEncoder();
   function foldLine(line) {
-    const encoder = new TextEncoder();
-    if (encoder.encode(line).length <= 75) {
+    if (_encoder.encode(line).length <= 75) {
       return line;
     }
     const segments = [];
     let current = "";
+    let currentBytes = 0;
     let budget = 75;
     for (const char of line) {
-      const encoded = encoder.encode(char).length;
-      if (encoder.encode(current).length + encoded > budget) {
+      const charBytes = _encoder.encode(char).length;
+      if (currentBytes + charBytes > budget) {
         segments.push(current);
         current = " " + char;
+        currentBytes = 1 + charBytes;
         budget = 74;
       } else {
         current += char;
+        currentBytes += charBytes;
       }
     }
     if (current) {
@@ -273,6 +276,9 @@
       exdates
     };
   }
+  function normalizeText(text) {
+    return text.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+  }
   function toAlarmTrigger(minutesBeforeStart) {
     let remainingMinutes = Math.max(1, Math.floor(minutesBeforeStart));
     const minutesPerDay = 24 * 60;
@@ -300,7 +306,7 @@
     for (const alarm of alarms.filter((item) => item.enabled)) {
       lines.push("BEGIN:VALARM");
       lines.push(`ACTION:${alarm.action}`);
-      lines.push(`TRIGGER;RELATED=START:${toAlarmTrigger(alarm.minutes)}`);
+      lines.push(`TRIGGER;RELATED=START;VALUE=DURATION:${toAlarmTrigger(alarm.minutes)}`);
       if (alarm.action === "DISPLAY") {
         lines.push(
           `DESCRIPTION:${escapeICSText(`${courseName} 还有 ${alarm.minutes} 分钟`)}`
@@ -339,16 +345,13 @@
     ].join("|");
     return stableUid(identity);
   }
-  function normalizeInlineText(text) {
-    return text.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
-  }
   function normalizeCourseText(course) {
-    let location = normalizeInlineText(course.location).replace(/校区\s*/g, "校区 ").replace(/\s*(?:教师|周次)[：:].*$/, "").trim();
-    let teacher = normalizeInlineText(course.teacher).trim();
-    let rawWeeks = normalizeInlineText(course.rawWeeks);
+    let location = normalizeText(course.location).replace(/校区\s*/g, "校区 ").replace(/\s*(?:教师|周次)[：:].*$/, "").trim();
+    let teacher = normalizeText(course.teacher).trim();
+    let rawWeeks = normalizeText(course.rawWeeks);
     const weekFromTeacher = teacher.match(WEEK_LABEL_PATTERN);
     if (weekFromTeacher) {
-      rawWeeks = rawWeeks || normalizeInlineText(weekFromTeacher[1] ?? "");
+      rawWeeks = rawWeeks || normalizeText(weekFromTeacher[1] ?? "");
       teacher = teacher.replace(WEEK_LABEL_PATTERN, "").trim();
     }
     if (rawWeeks && teacher.endsWith(rawWeeks)) {
@@ -531,16 +534,13 @@
   function getParagraphTextByIcon(con, selector) {
     const icon = con.querySelector(selector);
     const text = icon?.closest("p")?.textContent ?? "";
-    return normalizeTextField(text);
-  }
-  function normalizeTextField(text) {
-    return text.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+    return normalizeText(text);
   }
   function cleanLocationText(text) {
-    return normalizeTextField(text).replace(/^上课地点\s*[：:]\s*/, "").replace(TRAILING_DETAIL_PATTERN, "").replace(/校区(?=[^\s])/g, "校区 ").trim();
+    return normalizeText(text).replace(/^上课地点\s*[：:]\s*/, "").replace(TRAILING_DETAIL_PATTERN, "").replace(/校区(?=[^\s])/g, "校区 ").trim();
   }
   function cleanTeacherText(text, rawWeeks) {
-    let normalized = normalizeTextField(text).replace(/^教师\s*[：:]\s*/, "").replace(TRAILING_DETAIL_PATTERN, "").trim();
+    let normalized = normalizeText(text).replace(/^教师\s*[：:]\s*/, "").replace(TRAILING_DETAIL_PATTERN, "").trim();
     if (rawWeeks) {
       normalized = normalized.replace(new RegExp(`周次\\s*[：:]\\s*${escapeRegExp(rawWeeks)}$`), "").replace(new RegExp(`${escapeRegExp(rawWeeks)}$`), "").trim();
     }
@@ -1116,7 +1116,7 @@
     const [year, month, day] = semStart.split("-").map(Number);
     const weekDay = new Date(year ?? 0, (month ?? 1) - 1, day ?? 1).getDay();
     if (weekDay !== 1) {
-      const dayNames = "日一二三四五六";
+      const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
       setStatus(
         `⚠️ ${semStart} 是星期${dayNames[weekDay]}，请填写周一的日期`,
         "error"
@@ -1125,7 +1125,7 @@
       return;
     }
     setStatus("解析课表中…", "info");
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       try {
         const courses = extractCourses();
         if (!courses.length) {
@@ -1139,10 +1139,10 @@
         if (semKey) {
           saveSemStart(semKey, semStart);
         }
-        const alarmCount = currentCfg.alarms.filter(
+        const activeAlarms = currentCfg.alarms.filter(
           (alarm) => alarm.enabled
         ).length;
-        const alarmSummary = alarmCount ? `${alarmCount} 条提醒` : "无提醒";
+        const alarmSummary = activeAlarms ? `${activeAlarms} 条提醒` : "无提醒";
         setStatus(
           `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,
           "ok"
@@ -1154,7 +1154,7 @@
         );
         console.error("[ICS Exporter]", error);
       }
-    }, 0);
+    });
   }
   function createDialogConfigStore(initialConfig) {
     const config = cloneConfig(initialConfig);
@@ -1302,6 +1302,7 @@
       }
     });
   }
+  let syncExistingUI = null;
   function setActiveTab(tabBar, panelsEl, tabId) {
     for (const tabButton2 of Array.from(
       tabBar.querySelectorAll('[data-role="tab-button"]')
@@ -1321,6 +1322,7 @@
   }
   function createUI() {
     if (document.getElementById("ics-dialog")) {
+      syncExistingUI?.();
       return;
     }
     const cfg = getConfig();
@@ -1342,8 +1344,19 @@
       exportBtn,
       statusEl
     } = createDialogElements(cfg, defaultDate);
-    const store = createDialogConfigStore(cfg);
+    let store = createDialogConfigStore(cfg);
+    syncExistingUI = () => {
+      const latest = getConfig();
+      store = createDialogConfigStore(latest);
+      durInp.value = String(latest.duration);
+      renderPeriodRows(periodTb, latest);
+      refreshPeriodTable(periodTb, latest);
+      renderAlarmRows(alarmTb, latest.alarms);
+      refreshAlarmRows(alarmTb, latest.alarms);
+      refreshPreview(previewList, latest);
+    };
     function openDialog2() {
+      syncExistingUI?.();
       backdrop2.classList.add(styles.dialogOpen);
       dialog2.classList.add(styles.dialogOpen);
       dialog2.setAttribute("aria-hidden", "false");
@@ -1364,12 +1377,7 @@
         closeDialog();
       }
     });
-    const triggerBtn = document.getElementById("ics-trigger-btn");
-    if (triggerBtn) {
-      const fresh = triggerBtn.cloneNode(true);
-      triggerBtn.replaceWith(fresh);
-      fresh.addEventListener("click", openDialog2);
-    }
+    document.getElementById("ics-trigger-btn")?.addEventListener("click", openDialog2);
     tabBar.addEventListener("click", (event) => {
       const btn = event.target.closest(
         '[data-role="tab-button"]'

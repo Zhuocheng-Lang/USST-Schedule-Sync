@@ -33,7 +33,7 @@ describe("complete-form extraction to ICS", () => {
     const { ics } = generateICS(courses, "2026-03-02", defaultConfig());
 
     expect(ics).toContain("BEGIN:VALARM");
-    expect(ics).toContain("TRIGGER;RELATED=START:-PT15M");
+    expect(ics).toContain("TRIGGER;RELATED=START;VALUE=DURATION:-PT15M");
     expect(ics).toContain(
       String.raw`DESCRIPTION:教师：宁爱兵(副教授)(主讲)\n周次：1-16周`,
     );

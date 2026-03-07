@@ -32,7 +32,7 @@ export function buildAlarmLines(courseName: string, alarms: Alarm[]): string[] {
   for (const alarm of alarms.filter((item) => item.enabled)) {
     lines.push("BEGIN:VALARM");
     lines.push(`ACTION:${alarm.action}`);
-    lines.push(`TRIGGER;RELATED=START:${toAlarmTrigger(alarm.minutes)}`);
+    lines.push(`TRIGGER;RELATED=START;VALUE=DURATION:${toAlarmTrigger(alarm.minutes)}`);
     if (alarm.action === "DISPLAY") {
       lines.push(
         `DESCRIPTION:${escapeICSText(`${courseName} 还有 ${alarm.minutes} 分钟`)}`,

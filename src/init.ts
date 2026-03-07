@@ -2,9 +2,9 @@
 //  bootstrap/init.ts - 页面初始化与按钮注入编排
 // ════════════════════════════════════════════════════════════════════════════
 
-import { createUI } from "../ui/dialog";
-import { styles } from "../ui/css";
-import { injectTriggerButton } from "../ui/toolbar";
+import { createUI } from "./ui/dialog";
+import { styles } from "./ui/css";
+import { injectTriggerButton } from "./ui/toolbar";
 
 function isTimetableReady(): boolean {
   return document.querySelector('table[id^="kbgrid_table_"] .timetable_con') !== null;

@@ -102,4 +102,83 @@ describe("setActiveTab", () => {
       action: "AUDIO",
     });
   });
+
+  it("re-syncs alarm rows from storage when createUI runs again", () => {
+    let rawConfig = JSON.stringify(defaultConfig());
+    vi.stubGlobal(
+      "GM_getValue",
+      vi.fn((key: string) => {
+        if (key === "ics_config") {
+          return rawConfig;
+        }
+        return null;
+      }),
+    );
+
+    const trigger = document.createElement("button");
+    trigger.id = "ics-trigger-btn";
+    document.body.appendChild(trigger);
+
+    createUI();
+
+    rawConfig = JSON.stringify({
+      ...defaultConfig(),
+      alarms: [
+        { enabled: true, minutes: 15, action: "DISPLAY" },
+        { enabled: true, minutes: 10, action: "AUDIO" },
+      ],
+    });
+
+    createUI();
+
+    const alarmBody = document.getElementById("ics-alarm-tbody") as HTMLTableSectionElement;
+    expect(alarmBody.rows).toHaveLength(2);
+
+    const lastRow = alarmBody.rows[1] as HTMLTableRowElement;
+    const minutes = lastRow.querySelector('[data-role="alarm-minutes"]') as HTMLInputElement;
+    const action = lastRow.querySelector('[data-role="alarm-action"]') as HTMLSelectElement;
+
+    expect(minutes.value).toBe("10");
+    expect(action.value).toBe("AUDIO");
+  });
+
+  it("re-syncs alarm rows when reopening the existing dialog via trigger button", () => {
+    let rawConfig = JSON.stringify(defaultConfig());
+    vi.stubGlobal(
+      "GM_getValue",
+      vi.fn((key: string) => {
+        if (key === "ics_config") {
+          return rawConfig;
+        }
+        return null;
+      }),
+    );
+
+    const trigger = document.createElement("button");
+    trigger.id = "ics-trigger-btn";
+    document.body.appendChild(trigger);
+
+    createUI();
+
+    rawConfig = JSON.stringify({
+      ...defaultConfig(),
+      alarms: [
+        { enabled: true, minutes: 15, action: "DISPLAY" },
+        { enabled: true, minutes: 10, action: "AUDIO" },
+      ],
+    });
+
+    const liveTrigger = document.getElementById("ics-trigger-btn") as HTMLButtonElement;
+    liveTrigger.click();
+
+    const alarmBody = document.getElementById("ics-alarm-tbody") as HTMLTableSectionElement;
+    expect(alarmBody.rows).toHaveLength(2);
+
+    const lastRow = alarmBody.rows[1] as HTMLTableRowElement;
+    const minutes = lastRow.querySelector('[data-role="alarm-minutes"]') as HTMLInputElement;
+    const action = lastRow.querySelector('[data-role="alarm-action"]') as HTMLSelectElement;
+
+    expect(minutes.value).toBe("10");
+    expect(action.value).toBe("AUDIO");
+  });
 });

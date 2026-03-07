@@ -30,7 +30,7 @@ export function handleExportAction({
   const [year, month, day] = semStart.split("-").map(Number);
   const weekDay = new Date(year ?? 0, (month ?? 1) - 1, day ?? 1).getDay();
   if (weekDay !== 1) {
-    const dayNames = "日一二三四五六";
+    const dayNames = ["日", "一", "二", "三", "四", "五", "六"];
     setStatus(
       `⚠️ ${semStart} 是星期${dayNames[weekDay]}，请填写周一的日期`,
       "error",
@@ -41,7 +41,7 @@ export function handleExportAction({
 
   setStatus("解析课表中…", "info");
 
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     try {
       const courses = extractCourses();
       if (!courses.length) {
@@ -59,10 +59,12 @@ export function handleExportAction({
         saveSemStart(semKey, semStart);
       }
 
-      const alarmCount = currentCfg.alarms.filter(
+      const activeAlarms = currentCfg.alarms.filter(
         (alarm) => alarm.enabled,
       ).length;
-      const alarmSummary = alarmCount ? `${alarmCount} 条提醒` : "无提醒";
+      const alarmSummary = activeAlarms
+        ? `${activeAlarms} 条提醒`
+        : "无提醒";
       setStatus(
         `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,
         "ok",
@@ -74,5 +76,5 @@ export function handleExportAction({
       );
       console.error("[ICS Exporter]", error);
     }
-  }, 0);
+  });
 }

@@ -36,10 +36,10 @@ describe("generateICS alarms", () => {
 
     expect(ics).toContain("BEGIN:VALARM");
     expect(ics).toContain("ACTION:DISPLAY");
-    expect(ics).toContain("TRIGGER;RELATED=START:-PT1H30M");
+    expect(ics).toContain("TRIGGER;RELATED=START;VALUE=DURATION:-PT1H30M");
     expect(ics).toContain("DESCRIPTION:软件工程 还有 90 分钟");
     expect(ics).toContain("ACTION:AUDIO");
-    expect(ics).toContain("TRIGGER;RELATED=START:-P1DT2H5M");
+    expect(ics).toContain("TRIGGER;RELATED=START;VALUE=DURATION:-P1DT2H5M");
     expect(ics).not.toContain("ATTACH;VALUE=URI:Basso");
   });
 

@@ -8,6 +8,7 @@ import {
   escapeICSText,
   foldLine,
   getPeriodTime,
+  normalizeText,
   semesterDate,
   stableUid,
   toICSDateTime,
@@ -57,21 +58,17 @@ function buildEventUid(
   return stableUid(identity);
 }
 
-function normalizeInlineText(text: string): string {
-  return text.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
-}
-
 function normalizeCourseText(course: Course): Pick<Course, "location" | "teacher" | "rawWeeks"> {
-  let location = normalizeInlineText(course.location)
+  let location = normalizeText(course.location)
     .replace(/校区\s*/g, "校区 ")
     .replace(/\s*(?:教师|周次)[：:].*$/, "")
     .trim();
-  let teacher = normalizeInlineText(course.teacher).trim();
-  let rawWeeks = normalizeInlineText(course.rawWeeks);
+  let teacher = normalizeText(course.teacher).trim();
+  let rawWeeks = normalizeText(course.rawWeeks);
 
   const weekFromTeacher = teacher.match(WEEK_LABEL_PATTERN);
   if (weekFromTeacher) {
-    rawWeeks = rawWeeks || normalizeInlineText(weekFromTeacher[1] ?? "");
+    rawWeeks = rawWeeks || normalizeText(weekFromTeacher[1] ?? "");
     teacher = teacher.replace(WEEK_LABEL_PATTERN, "").trim();
   }
 
