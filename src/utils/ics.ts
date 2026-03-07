@@ -6,6 +6,10 @@ export function toICSDateTime(dateISO: string, hhmm: string): string {
   return dateISO.replace(/-/g, "") + "T" + hhmm.replace(":", "") + "00";
 }
 
+export function toICSDateTimeList(dateISOList: string[], hhmm: string): string {
+  return dateISOList.map((dateISO) => toICSDateTime(dateISO, hhmm)).join(",");
+}
+
 export function escapeICSText(text: string): string {
   return String(text)
     .replace(/\\/g, "\\\\")

@@ -111,6 +111,9 @@
   function toICSDateTime(dateISO, hhmm) {
     return dateISO.replace(/-/g, "") + "T" + hhmm.replace(":", "") + "00";
   }
+  function toICSDateTimeList(dateISOList, hhmm) {
+    return dateISOList.map((dateISO) => toICSDateTime(dateISO, hhmm)).join(",");
+  }
   function escapeICSText(text) {
     return String(text).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
   }
@@ -166,6 +169,54 @@
     }
     return weeks;
   }
+  function analyzeWeekPattern(weeks) {
+    if (!weeks.length) {
+      return null;
+    }
+    const sorted = [...new Set(weeks)].sort((left, right) => left - right);
+    const firstWeek = sorted[0] ?? 1;
+    const lastWeek = sorted[sorted.length - 1] ?? firstWeek;
+    if (sorted.length === 1) {
+      return {
+        firstWeek,
+        interval: 1,
+        count: 1,
+        exdates: []
+      };
+    }
+    const deltas = sorted.slice(1).map((week, index) => week - sorted[index]);
+    if (deltas.every((delta) => delta === 1)) {
+      return {
+        firstWeek,
+        interval: 1,
+        count: sorted.length,
+        exdates: []
+      };
+    }
+    if (deltas.every((delta) => delta === 2)) {
+      return {
+        firstWeek,
+        interval: 2,
+        count: sorted.length,
+        exdates: []
+      };
+    }
+    const sameParity = sorted.every((week) => week % 2 === firstWeek % 2);
+    const interval = sameParity ? 2 : 1;
+    const exdates = [];
+    const weekSet = new Set(sorted);
+    for (let week = firstWeek; week <= lastWeek; week += interval) {
+      if (!weekSet.has(week)) {
+        exdates.push(week);
+      }
+    }
+    return {
+      firstWeek,
+      interval,
+      count: Math.floor((lastWeek - firstWeek) / interval) + 1,
+      exdates
+    };
+  }
   const VTIMEZONE_SHANGHAI = [
     "BEGIN:VTIMEZONE",
     "TZID:Asia/Shanghai",
@@ -200,56 +251,98 @@
     for (const course of courses) {
       const startPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pStart);
       const endPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pEnd);
-      if (!startPeriod || !endPeriod) {
+      const weekPattern = analyzeWeekPattern(course.weeks);
+      if (!startPeriod || !endPeriod || !weekPattern) {
         continue;
       }
-      for (const week of course.weeks) {
-        const dateStr = semesterDate(firstMonday, week, course.dow);
-        lines.push("BEGIN:VEVENT");
-        lines.push(`UID:${uuidV4()}@usst.timetable`);
-        lines.push(`DTSTAMP:${dtstamp}`);
-        lines.push(
-          `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`
-        );
-        lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`);
-        lines.push(`SUMMARY:${escapeICSText(course.name)}`);
-        lines.push(`LOCATION:${escapeICSText(course.location)}`);
-        lines.push(
-          `DESCRIPTION:${escapeICSText(`教师：${course.teacher}
-第${week}周（${course.rawWeeks}）`)}`
-        );
-        for (const alarm of activeAlarms) {
-          lines.push("BEGIN:VALARM");
-          lines.push(`ACTION:${alarm.action}`);
-          lines.push(`TRIGGER:-PT${alarm.minutes}M`);
-          if (alarm.action === "DISPLAY") {
-            lines.push(
-              `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`
-            );
-          } else {
-            lines.push("ATTACH;VALUE=URI:Basso");
-          }
-          lines.push("END:VALARM");
-        }
-        lines.push("END:VEVENT");
-        eventCount++;
+      const firstDate = semesterDate(
+        firstMonday,
+        weekPattern.firstWeek,
+        course.dow
+      );
+      const descriptionParts = [];
+      if (course.teacher) {
+        descriptionParts.push(`教师：${course.teacher}`);
       }
+      descriptionParts.push(`周次：${course.rawWeeks}`);
+      lines.push("BEGIN:VEVENT");
+      lines.push(`UID:${uuidV4()}@usst.timetable`);
+      lines.push(`DTSTAMP:${dtstamp}`);
+      lines.push(
+        `DTSTART;TZID=${tzid}:${toICSDateTime(firstDate, startPeriod.start)}`
+      );
+      lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(firstDate, endPeriod.end)}`);
+      lines.push(`SUMMARY:${escapeICSText(course.name)}`);
+      lines.push(`LOCATION:${escapeICSText(course.location)}`);
+      lines.push(`DESCRIPTION:${escapeICSText(descriptionParts.join("\n"))}`);
+      if (weekPattern.count > 1) {
+        lines.push(
+          `RRULE:FREQ=WEEKLY;INTERVAL=${weekPattern.interval};COUNT=${weekPattern.count}`
+        );
+      }
+      if (weekPattern.exdates.length) {
+        const exdateList = weekPattern.exdates.map(
+          (week) => semesterDate(firstMonday, week, course.dow)
+        );
+        lines.push(
+          `EXDATE;TZID=${tzid}:${toICSDateTimeList(exdateList, startPeriod.start)}`
+        );
+      }
+      for (const alarm of activeAlarms) {
+        lines.push("BEGIN:VALARM");
+        lines.push(`ACTION:${alarm.action}`);
+        lines.push(`TRIGGER:-PT${alarm.minutes}M`);
+        if (alarm.action === "DISPLAY") {
+          lines.push(
+            `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`
+          );
+        } else {
+          lines.push("ATTACH;VALUE=URI:Basso");
+        }
+        lines.push("END:VALARM");
+      }
+      lines.push("END:VEVENT");
+      eventCount++;
     }
     lines.push("END:VCALENDAR");
     return { ics: lines.map(foldLine).join("\r\n"), eventCount };
   }
+  const DETAIL_LABELS = [
+    "课程学时组成",
+    "课程总学时",
+    "教学班名称",
+    "教学班组成",
+    "授课方式名称",
+    "上课地点",
+    "考核方式",
+    "考试方式",
+    "选课备注",
+    "授课方式",
+    "重修标记",
+    "课程性质",
+    "课程标记",
+    "周学时",
+    "总学时",
+    "学分",
+    "周数",
+    "校区",
+    "教师",
+    "教学班"
+  ].sort((left, right) => right.length - left.length);
+  const DETAIL_END_LABELS = DETAIL_LABELS.filter(
+    (label2) => label2 !== "校区" && label2 !== "上课地点"
+  ).join("|");
   function extractCourses() {
-    const listTable = document.querySelector("#kblist_table");
-    const raw = listTable ? extractFromList(listTable) : extractFromGrid();
-    const seen = new Set();
-    return raw.filter((course) => {
-      const key = `${course.name}|${course.dow}|${course.pStart}|${course.pEnd}|${course.rawWeeks}`;
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
+    const gridCourses = dedupeCourses(extractFromGrid());
+    if (gridCourses.length) {
+      return stripSource(gridCourses);
+    }
+    const listCourses = dedupeCourses(
+      Array.from(document.querySelectorAll('table[id^="kblist_table"]')).flatMap(
+        (table2) => extractFromList(table2)
+      )
+    );
+    return stripSource(listCourses);
   }
   function extractFromList(table2) {
     const courses = [];
@@ -291,53 +384,51 @@
   }
   function extractFromGrid() {
     const courses = [];
-    const grid = document.querySelector("#kbgrid_table_0");
-    if (!grid) {
-      return courses;
-    }
-    for (const td of Array.from(grid.querySelectorAll("td[id]"))) {
-      const [dowStr] = td.id.split("-");
-      const dow = Number(dowStr);
-      if (!dow || dow > 7) {
-        continue;
-      }
-      for (const con of Array.from(td.querySelectorAll(".timetable_con"))) {
-        const timeEl = con.querySelector(".glyphicon-time");
-        if (!timeEl) {
+    for (const grid of Array.from(
+      document.querySelectorAll('table[id^="kbgrid_table_"]')
+    )) {
+      for (const td of Array.from(grid.querySelectorAll("td[id]"))) {
+        const match = td.id.match(/^(\d+)-(\d+)$/);
+        const dow = Number(match?.[1]);
+        if (!dow || dow > 7) {
           continue;
         }
-        const text = timeEl.parentElement?.textContent?.trim() ?? "";
-        const periodMatch = text.match(/\((\d+)-(\d+)节\)/);
-        if (!periodMatch) {
-          continue;
+        for (const con of Array.from(td.querySelectorAll(".timetable_con"))) {
+          const timeText = getParagraphTextByIcon(con, ".glyphicon-time");
+          if (!timeText) {
+            continue;
+          }
+          const periodMatch = timeText.match(/\((\d+)-(\d+)节\)/);
+          if (!periodMatch) {
+            continue;
+          }
+          const pStart = Number(periodMatch[1]);
+          const pEnd = Number(periodMatch[2]);
+          const rawWeeks = timeText.replace(/\(\d+-\d+节\)/, "").trim();
+          const weeks = parseWeeks(rawWeeks);
+          if (!weeks.length) {
+            continue;
+          }
+          const titleEl = con.querySelector(".title");
+          if (!titleEl) {
+            continue;
+          }
+          const name = titleEl.textContent?.trim().replace(/[★○◆◇●]/g, "").trim() ?? "";
+          if (!name) {
+            continue;
+          }
+          courses.push({
+            name,
+            location: getParagraphTextByIcon(con, ".glyphicon-map-marker"),
+            teacher: getParagraphTextByIcon(con, ".glyphicon-user"),
+            dow,
+            pStart,
+            pEnd,
+            weeks,
+            rawWeeks,
+            source: "grid"
+          });
         }
-        const pStart = Number(periodMatch[1]);
-        const pEnd = Number(periodMatch[2]);
-        const rawWeeks = text.replace(/\(\d+-\d+节\)/, "").trim();
-        const weeks = parseWeeks(rawWeeks);
-        if (!weeks.length) {
-          continue;
-        }
-        const titleEl = con.querySelector(".title");
-        if (!titleEl) {
-          continue;
-        }
-        const name = titleEl.textContent?.trim().replace(/[★○◆◇●]/g, "").trim() ?? "";
-        if (!name) {
-          continue;
-        }
-        const locEl = con.querySelector(".glyphicon-map-marker");
-        const tchrEl = con.querySelector(".glyphicon-user");
-        courses.push({
-          name,
-          location: locEl ? locEl.parentElement?.textContent?.trim().replace(/\s+/g, " ") ?? "" : "",
-          teacher: tchrEl ? tchrEl.parentElement?.textContent?.trim() ?? "" : "",
-          dow,
-          pStart,
-          pEnd,
-          weeks,
-          rawWeeks
-        });
       }
     }
     return courses;
@@ -351,18 +442,22 @@
     if (!name) {
       return null;
     }
-    const pText = Array.from(con.querySelectorAll("p")).map((p) => p.textContent?.replace(/\s+/g, " ").trim() ?? "").join(" ");
+    const pText = normalizeDetailText(
+      Array.from(con.querySelectorAll("p")).map(getSeparatedParagraphText).join(" ")
+    );
     let rawWeeks = "";
     let weeks = [];
     const labelledMatch = pText.match(
-      /周数[：:]\s*([^\s校区上下]+周[（(双单）)]*)/
+      /周数[：:]\s*(\d+(?:-\d+)?周(?:[（(][单双][）)])?)/
     );
     if (labelledMatch) {
       rawWeeks = labelledMatch[1]?.trim() ?? "";
       weeks = parseWeeks(rawWeeks);
     }
     if (!weeks.length) {
-      const bareMatch = pText.match(/(\d+-\d+周[（(双单）)]*|\d+周)/);
+      const bareMatch = pText.match(
+        /(?:^|\s)(\d+(?:-\d+)?周(?:[（(][单双][）)])?)(?=\s|$)/
+      );
       if (bareMatch) {
         rawWeeks = bareMatch[1] ?? "";
         weeks = parseWeeks(rawWeeks);
@@ -371,18 +466,87 @@
     if (!weeks.length) {
       return null;
     }
-    const locMatch = pText.match(/上课地点[：:]\s*(\S+)/);
-    const tchrMatch = pText.match(/教师\s*[：:]\s*(\S+(?:[,，]\S+)*)/);
+    const campusLocMatch = pText.match(
+      new RegExp(
+        `校区[：:]\\s*([^\\s]+)\\s*上课地点[：:]\\s*(.+?)(?=\\s*(?:${DETAIL_END_LABELS})\\s*[：:]|$)`
+      )
+    );
+    const locMatch = pText.match(
+      new RegExp(
+        `上课地点[：:]\\s*(.+?)(?=\\s*(?:${DETAIL_END_LABELS})\\s*[：:]|$)`
+      )
+    );
+    const tchrMatch = pText.match(
+      new RegExp(
+        `教师\\s*[：:]\\s*(.+?)(?=\\s*(?:${DETAIL_END_LABELS})\\s*[：:]|$)`
+      )
+    );
+    const location = campusLocMatch ? `${campusLocMatch[1]} ${campusLocMatch[2]}` : locMatch?.[1] ?? "";
     return {
       name,
-      location: locMatch?.[1] ?? "",
-      teacher: tchrMatch?.[1] ?? "",
+      location: location.replace(/\s+/g, " ").trim(),
+      teacher: (tchrMatch?.[1] ?? "").replace(/\s+/g, " ").trim(),
       dow,
       pStart,
       pEnd,
       weeks,
-      rawWeeks
+      rawWeeks,
+      source: "list"
     };
+  }
+  function getParagraphTextByIcon(con, selector) {
+    const icon = con.querySelector(selector);
+    const text = icon?.closest("p")?.textContent ?? "";
+    return text.replace(/\s+/g, " ").trim();
+  }
+  function normalizeDetailText(text) {
+    return text.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+  }
+  function getSeparatedParagraphText(paragraph) {
+    const parts = Array.from(paragraph.childNodes).map((node) => node.textContent?.replace(/\s+/g, " ").trim() ?? "").filter(Boolean);
+    if (!parts.length) {
+      return "";
+    }
+    return parts.join(" ");
+  }
+  function getCourseKey(course) {
+    return `${course.name}|${course.dow}|${course.pStart}|${course.pEnd}|${course.rawWeeks}`;
+  }
+  function stripSource(courses) {
+    return courses.map(({ source: _source, ...course }) => course);
+  }
+  function dedupeCourses(courses) {
+    const merged = new Map();
+    for (const course of courses) {
+      const key = getCourseKey(course);
+      const existing = merged.get(key);
+      if (!existing || isHigherQualityCourse(course, existing)) {
+        merged.set(key, course);
+      }
+    }
+    return Array.from(merged.values());
+  }
+  function isHigherQualityCourse(candidate, existing) {
+    return scoreCourse(candidate) > scoreCourse(existing);
+  }
+  function scoreCourse(course) {
+    let score = course.weeks.length;
+    if (course.location) {
+      score += 3;
+    }
+    if (course.teacher) {
+      score += 3;
+    }
+    if (course.location.includes("校区")) {
+      score += 2;
+    }
+    if (!course.location.includes("教师")) {
+      score += 4;
+    }
+    if (!course.location.includes("教学班")) {
+      score += 2;
+    }
+    return score;
   }
   function downloadICS(content, filename) {
     const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });

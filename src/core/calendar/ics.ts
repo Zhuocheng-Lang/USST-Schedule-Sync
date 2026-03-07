@@ -4,11 +4,13 @@
 
 import type { Config, Course } from "../../types";
 import {
+  analyzeWeekPattern,
   escapeICSText,
   foldLine,
   getPeriodTime,
   semesterDate,
   toICSDateTime,
+  toICSDateTimeList,
   uuidV4,
 } from "../../utils";
 
@@ -62,43 +64,64 @@ export function generateICS(
   for (const course of courses) {
     const startPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pStart);
     const endPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pEnd);
-    if (!startPeriod || !endPeriod) {
+    const weekPattern = analyzeWeekPattern(course.weeks);
+    if (!startPeriod || !endPeriod || !weekPattern) {
       continue;
     }
 
-    for (const week of course.weeks) {
-      const dateStr = semesterDate(firstMonday, week, course.dow);
-
-      lines.push("BEGIN:VEVENT");
-      lines.push(`UID:${uuidV4()}@usst.timetable`);
-      lines.push(`DTSTAMP:${dtstamp}`);
-      lines.push(
-        `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`,
-      );
-      lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`);
-      lines.push(`SUMMARY:${escapeICSText(course.name)}`);
-      lines.push(`LOCATION:${escapeICSText(course.location)}`);
-      lines.push(
-        `DESCRIPTION:${escapeICSText(`教师：${course.teacher}\n第${week}周（${course.rawWeeks}）`)}`,
-      );
-
-      for (const alarm of activeAlarms) {
-        lines.push("BEGIN:VALARM");
-        lines.push(`ACTION:${alarm.action}`);
-        lines.push(`TRIGGER:-PT${alarm.minutes}M`);
-        if (alarm.action === "DISPLAY") {
-          lines.push(
-            `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`,
-          );
-        } else {
-          lines.push("ATTACH;VALUE=URI:Basso");
-        }
-        lines.push("END:VALARM");
-      }
-
-      lines.push("END:VEVENT");
-      eventCount++;
+    const firstDate = semesterDate(
+      firstMonday,
+      weekPattern.firstWeek,
+      course.dow,
+    );
+    const descriptionParts = [];
+    if (course.teacher) {
+      descriptionParts.push(`教师：${course.teacher}`);
     }
+    descriptionParts.push(`周次：${course.rawWeeks}`);
+
+    lines.push("BEGIN:VEVENT");
+    lines.push(`UID:${uuidV4()}@usst.timetable`);
+    lines.push(`DTSTAMP:${dtstamp}`);
+    lines.push(
+      `DTSTART;TZID=${tzid}:${toICSDateTime(firstDate, startPeriod.start)}`,
+    );
+    lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(firstDate, endPeriod.end)}`);
+    lines.push(`SUMMARY:${escapeICSText(course.name)}`);
+    lines.push(`LOCATION:${escapeICSText(course.location)}`);
+    lines.push(`DESCRIPTION:${escapeICSText(descriptionParts.join("\n"))}`);
+
+    if (weekPattern.count > 1) {
+      lines.push(
+        `RRULE:FREQ=WEEKLY;INTERVAL=${weekPattern.interval};COUNT=${weekPattern.count}`,
+      );
+    }
+
+    if (weekPattern.exdates.length) {
+      const exdateList = weekPattern.exdates.map((week) =>
+        semesterDate(firstMonday, week, course.dow),
+      );
+      lines.push(
+        `EXDATE;TZID=${tzid}:${toICSDateTimeList(exdateList, startPeriod.start)}`,
+      );
+    }
+
+    for (const alarm of activeAlarms) {
+      lines.push("BEGIN:VALARM");
+      lines.push(`ACTION:${alarm.action}`);
+      lines.push(`TRIGGER:-PT${alarm.minutes}M`);
+      if (alarm.action === "DISPLAY") {
+        lines.push(
+          `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`,
+        );
+      } else {
+        lines.push("ATTACH;VALUE=URI:Basso");
+      }
+      lines.push("END:VALARM");
+    }
+
+    lines.push("END:VEVENT");
+    eventCount++;
   }
 
   lines.push("END:VCALENDAR");

@@ -1,4 +1,9 @@
 export { addMinutes, getPeriodTime, semesterDate } from "./date";
-export { escapeICSText, foldLine, toICSDateTime } from "./ics";
+export {
+  escapeICSText,
+  foldLine,
+  toICSDateTime,
+  toICSDateTimeList,
+} from "./ics";
 export { uuidV4 } from "./id";
-export { parseWeeks } from "./weeks";
+export { analyzeWeekPattern, parseWeeks } from "./weeks";

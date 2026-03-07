@@ -7,6 +7,15 @@
 - 安装依赖：`pnpm install`
 - 启动开发：`pnpm dev`
 - 生产构建：`pnpm build`
+- 运行测试：`pnpm test:run`
+- 覆盖率：`pnpm test:coverage`
+
+## 测试
+
+- 测试框架使用 Vitest
+- `tests/unit` 放纯函数与 ICS 生成测试
+- `tests/integration` 放基于 HTML fixture 的提取与导出链路测试
+- `tests/fixtures/complete-form.html` 是完整字段课表样本，用于验证 `学分`、`周学时`、RRULE 等回归场景
 
 ### 关于 `pnpm dev` 的说明
 

@@ -31,3 +31,67 @@ export function parseWeeks(text: string): number[] {
   }
   return weeks;
 }
+
+export interface WeekPattern {
+  firstWeek: number;
+  interval: number;
+  count: number;
+  exdates: number[];
+}
+
+export function analyzeWeekPattern(weeks: number[]): WeekPattern | null {
+  if (!weeks.length) {
+    return null;
+  }
+
+  const sorted = [...new Set(weeks)].sort((left, right) => left - right);
+  const firstWeek = sorted[0] ?? 1;
+  const lastWeek = sorted[sorted.length - 1] ?? firstWeek;
+
+  if (sorted.length === 1) {
+    return {
+      firstWeek,
+      interval: 1,
+      count: 1,
+      exdates: [],
+    };
+  }
+
+  const deltas = sorted.slice(1).map((week, index) => week - sorted[index]!);
+
+  if (deltas.every((delta) => delta === 1)) {
+    return {
+      firstWeek,
+      interval: 1,
+      count: sorted.length,
+      exdates: [],
+    };
+  }
+
+  if (deltas.every((delta) => delta === 2)) {
+    return {
+      firstWeek,
+      interval: 2,
+      count: sorted.length,
+      exdates: [],
+    };
+  }
+
+  const sameParity = sorted.every((week) => week % 2 === firstWeek % 2);
+  const interval = sameParity ? 2 : 1;
+  const exdates: number[] = [];
+  const weekSet = new Set(sorted);
+
+  for (let week = firstWeek; week <= lastWeek; week += interval) {
+    if (!weekSet.has(week)) {
+      exdates.push(week);
+    }
+  }
+
+  return {
+    firstWeek,
+    interval,
+    count: Math.floor((lastWeek - firstWeek) / interval) + 1,
+    exdates,
+  };
+}
