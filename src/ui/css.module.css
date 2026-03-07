@@ -146,7 +146,7 @@
   line-height: 1.42857143;
 }
 
-.tabButton.active {
+.tabButtonActive {
   color: #555;
   background-color: #fff;
   border-color: #ddd #ddd transparent;
@@ -154,7 +154,7 @@
   cursor: default;
 }
 
-.tabButton:hover:not(.active) {
+.tabButton:hover:not(.tabButtonActive) {
   background-color: #eee;
   border-color: #eee #eee #ddd;
 }
@@ -176,7 +176,7 @@
   display: none;
 }
 
-.panel.active {
+.panelActive {
   display: block;
 }
 

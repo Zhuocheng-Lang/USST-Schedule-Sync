@@ -5,5 +5,5 @@ export {
   toICSDateTime,
   toICSDateTimeList,
 } from "./ics";
-export { uuidV4 } from "./id";
+export { stableUid, uuidV4 } from "./id";
 export { analyzeWeekPattern, parseWeeks } from "./weeks";

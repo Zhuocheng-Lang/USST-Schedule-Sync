@@ -7,6 +7,12 @@ import type { Alarm, Config } from "../../types";
 import { addMinutes } from "../../utils";
 import { styles } from "../css";
 
+function getAlarmRows(
+  alarmTb: HTMLTableSectionElement,
+): HTMLTableRowElement[] {
+  return Array.from(alarmTb.rows);
+}
+
 export function readPeriodConfig(
   durInp: HTMLInputElement,
   periodTb: HTMLTableSectionElement,
@@ -24,12 +30,10 @@ export function readPeriodConfig(
 }
 
 export function readAlarms(alarmTb: HTMLTableSectionElement): Alarm[] {
-  return Array.from(
-    alarmTb.querySelectorAll<HTMLElement>("tr[data-alarm-idx]"),
-  ).map((tr) => ({
+  return getAlarmRows(alarmTb).map((tr) => ({
     enabled:
       tr.querySelector<HTMLInputElement>('[data-role="alarm-enabled"]')
-        ?.checked ?? false,
+        ?.checked ?? true,
     minutes: Math.max(
       1,
       parseInt(
@@ -102,9 +106,7 @@ export function refreshPreview(
 }
 
 export function refreshAlarmRows(alarmTb: HTMLTableSectionElement): void {
-  alarmTb
-    .querySelectorAll<HTMLElement>("tr[data-alarm-idx]")
-    .forEach((tr, index) => {
+  getAlarmRows(alarmTb).forEach((tr, index) => {
       tr.dataset.alarmIdx = String(index);
       const enabled =
         tr.querySelector<HTMLInputElement>('[data-role="alarm-enabled"]')

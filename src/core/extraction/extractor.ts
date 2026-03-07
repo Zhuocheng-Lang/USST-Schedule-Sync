@@ -5,9 +5,7 @@
 import type { Course } from "../../types";
 import { parseWeeks } from "../../utils";
 
-type ExtractedCourse = Course & {
-  source: "grid" | "list";
-};
+type ExtractedCourse = Course;
 
 const DETAIL_LABELS = [
   "课程学时组成",
@@ -36,64 +34,12 @@ const DETAIL_END_LABELS = DETAIL_LABELS.filter(
   (label) => label !== "校区" && label !== "上课地点",
 ).join("|");
 
+const TRAILING_DETAIL_PATTERN = new RegExp(
+  `\\s*(?:${DETAIL_END_LABELS}|周次|周数)\\s*[：:].*$`,
+);
+
 export function extractCourses(): Course[] {
-  const gridCourses = dedupeCourses(extractFromGrid());
-  if (gridCourses.length) {
-    return stripSource(gridCourses);
-  }
-
-  const listCourses = dedupeCourses(
-    Array.from(document.querySelectorAll('table[id^="kblist_table"]')).flatMap(
-      (table) => extractFromList(table),
-    ),
-  );
-
-  return stripSource(listCourses);
-}
-
-function extractFromList(table: Element): ExtractedCourse[] {
-  const courses: ExtractedCourse[] = [];
-
-  for (let dow = 1; dow <= 7; dow++) {
-    const tbody = table.querySelector(`tbody#xq_${dow}`);
-    if (!tbody || (tbody as HTMLElement).style.display === "none") {
-      continue;
-    }
-
-    let pStart: number | null = null;
-    let pEnd: number | null = null;
-
-    for (const tr of Array.from(tbody.querySelectorAll("tr"))) {
-      const festEl = tr.querySelector("td .festival");
-      if (festEl) {
-        const text = festEl.textContent?.trim() ?? "";
-        const rangeMatch = text.match(/^(\d+)-(\d+)$/);
-        if (rangeMatch) {
-          pStart = Number(rangeMatch[1]);
-          pEnd = Number(rangeMatch[2]);
-        } else {
-          const singleMatch = text.match(/^(\d+)$/);
-          if (singleMatch) {
-            pStart = Number(singleMatch[1]);
-            pEnd = pStart;
-          }
-        }
-      }
-
-      if (pStart === null || pEnd === null) {
-        continue;
-      }
-
-      for (const con of Array.from(tr.querySelectorAll(".timetable_con"))) {
-        const course = parseCourseCon(con, dow, pStart, pEnd);
-        if (course) {
-          courses.push(course);
-        }
-      }
-    }
-  }
-
-  return courses;
+  return dedupeCourses(extractFromGrid());
 }
 
 function extractFromGrid(): ExtractedCourse[] {
@@ -143,14 +89,18 @@ function extractFromGrid(): ExtractedCourse[] {
 
         courses.push({
           name,
-          location: getParagraphTextByIcon(con, ".glyphicon-map-marker"),
-          teacher: getParagraphTextByIcon(con, ".glyphicon-user"),
+          location: cleanLocationText(
+            getParagraphTextByIcon(con, ".glyphicon-map-marker"),
+          ),
+          teacher: cleanTeacherText(
+            getParagraphTextByIcon(con, ".glyphicon-user"),
+            rawWeeks,
+          ),
           dow,
           pStart,
           pEnd,
           weeks,
           rawWeeks,
-          source: "grid",
         });
       }
     }
@@ -159,119 +109,49 @@ function extractFromGrid(): ExtractedCourse[] {
   return courses;
 }
 
-function parseCourseCon(
-  con: Element,
-  dow: number,
-  pStart: number,
-  pEnd: number,
-): ExtractedCourse | null {
-  const titleEl = con.querySelector(".title");
-  if (!titleEl) {
-    return null;
-  }
-
-  const name =
-    titleEl.textContent
-      ?.trim()
-      .replace(/[★○◆◇●]/g, "")
-      .trim() ?? "";
-  if (!name) {
-    return null;
-  }
-
-  const pText = normalizeDetailText(
-    Array.from(con.querySelectorAll("p"))
-      .map(getSeparatedParagraphText)
-      .join(" "),
-  );
-
-  let rawWeeks = "";
-  let weeks: number[] = [];
-
-  const labelledMatch = pText.match(
-    /周数[：:]\s*(\d+(?:-\d+)?周(?:[（(][单双][）)])?)/,
-  );
-  if (labelledMatch) {
-    rawWeeks = labelledMatch[1]?.trim() ?? "";
-    weeks = parseWeeks(rawWeeks);
-  }
-  if (!weeks.length) {
-    const bareMatch = pText.match(
-      /(?:^|\s)(\d+(?:-\d+)?周(?:[（(][单双][）)])?)(?=\s|$)/,
-    );
-    if (bareMatch) {
-      rawWeeks = bareMatch[1] ?? "";
-      weeks = parseWeeks(rawWeeks);
-    }
-  }
-  if (!weeks.length) {
-    return null;
-  }
-
-  const campusLocMatch = pText.match(
-    new RegExp(
-      `校区[：:]\\s*([^\\s]+)\\s*上课地点[：:]\\s*(.+?)(?=\\s*(?:${DETAIL_END_LABELS})\\s*[：:]|$)`,
-    ),
-  );
-  const locMatch = pText.match(
-    new RegExp(
-      `上课地点[：:]\\s*(.+?)(?=\\s*(?:${DETAIL_END_LABELS})\\s*[：:]|$)`,
-    ),
-  );
-  const tchrMatch = pText.match(
-    new RegExp(
-      `教师\\s*[：:]\\s*(.+?)(?=\\s*(?:${DETAIL_END_LABELS})\\s*[：:]|$)`,
-    ),
-  );
-
-  const location = campusLocMatch
-    ? `${campusLocMatch[1]} ${campusLocMatch[2]}`
-    : (locMatch?.[1] ?? "");
-
-  return {
-    name,
-    location: location.replace(/\s+/g, " ").trim(),
-    teacher: (tchrMatch?.[1] ?? "").replace(/\s+/g, " ").trim(),
-    dow,
-    pStart,
-    pEnd,
-    weeks,
-    rawWeeks,
-    source: "list",
-  };
-}
-
 function getParagraphTextByIcon(con: Element, selector: string): string {
   const icon = con.querySelector(selector);
   const text = icon?.closest("p")?.textContent ?? "";
-  return text.replace(/\s+/g, " ").trim();
+  return normalizeTextField(text);
 }
 
-function normalizeDetailText(text: string): string {
+function normalizeTextField(text: string): string {
   return text
     .replace(/\u00a0/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function getSeparatedParagraphText(paragraph: Element): string {
-  const parts = Array.from(paragraph.childNodes)
-    .map((node) => node.textContent?.replace(/\s+/g, " ").trim() ?? "")
-    .filter(Boolean);
+function cleanLocationText(text: string): string {
+  return normalizeTextField(text)
+    .replace(/^上课地点\s*[：:]\s*/, "")
+    .replace(TRAILING_DETAIL_PATTERN, "")
+    .replace(/校区(?=[^\s])/g, "校区 ")
+    .trim();
+}
 
-  if (!parts.length) {
-    return "";
+function cleanTeacherText(text: string, rawWeeks: string): string {
+  let normalized = normalizeTextField(text)
+    .replace(/^教师\s*[：:]\s*/, "")
+    .replace(TRAILING_DETAIL_PATTERN, "")
+    .trim();
+
+  if (rawWeeks) {
+    normalized = normalized
+      .replace(new RegExp(`周次\\s*[：:]\\s*${escapeRegExp(rawWeeks)}$`), "")
+      .replace(new RegExp(`${escapeRegExp(rawWeeks)}$`), "")
+      .trim();
   }
 
-  return parts.join(" ");
+  return normalized;
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function getCourseKey(course: Course): string {
   return `${course.name}|${course.dow}|${course.pStart}|${course.pEnd}|${course.rawWeeks}`;
-}
-
-function stripSource(courses: ExtractedCourse[]): Course[] {
-  return courses.map(({ source: _source, ...course }) => course);
 }
 
 function dedupeCourses(courses: ExtractedCourse[]): ExtractedCourse[] {

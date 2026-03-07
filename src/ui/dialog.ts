@@ -18,6 +18,29 @@ import {
   refreshPreview,
 } from "./export-dialog/state";
 
+export function setActiveTab(
+  tabBar: HTMLDivElement,
+  panelsEl: HTMLDivElement,
+  tabId: string,
+): void {
+  for (const tabButton of Array.from(
+    tabBar.querySelectorAll<HTMLElement>('[data-role="tab-button"]'),
+  )) {
+    const active = tabButton.dataset.tab === tabId;
+    tabButton.classList.toggle(styles.tabButtonActive, active);
+    tabButton.setAttribute("aria-selected", String(active));
+  }
+
+  for (const panel of Array.from(
+    panelsEl.querySelectorAll<HTMLElement>('[data-role="tab-panel"]'),
+  )) {
+    const active = panel.id === `ics-tab-${tabId}`;
+    panel.classList.toggle(styles.panelActive, active);
+    panel.hidden = !active;
+    panel.setAttribute("aria-hidden", String(!active));
+  }
+}
+
 export function createUI(): void {
   if (document.getElementById("ics-dialog")) {
     return;
@@ -87,18 +110,11 @@ export function createUI(): void {
     }
     const tabId = btn.dataset.tab;
 
-    for (const tabButton of Array.from(
-      tabBar.querySelectorAll<HTMLElement>('[data-role="tab-button"]'),
-    )) {
-      const active = tabButton.dataset.tab === tabId;
-      tabButton.classList.toggle(styles.active, active);
-      tabButton.setAttribute("aria-selected", String(active));
+    if (!tabId) {
+      return;
     }
-    for (const panel of Array.from(
-      panelsEl.querySelectorAll<HTMLElement>('[data-role="tab-panel"]'),
-    )) {
-      panel.classList.toggle(styles.active, panel.id === `ics-tab-${tabId}`);
-    }
+
+    setActiveTab(tabBar, panelsEl, tabId);
     if (tabId === "export") {
       refreshPreview(previewList, readPeriodCfg());
     }
@@ -123,6 +139,7 @@ export function createUI(): void {
   }
 
   refreshPreview(previewList, { periods: cfg.periods, duration: cfg.duration });
+  refreshAlarmRows(alarmTb);
 
   durInp.addEventListener("input", onPeriodChange);
 
@@ -173,6 +190,9 @@ export function createUI(): void {
     if (!btn) {
       return;
     }
+    if (alarmTb.querySelectorAll("tr").length <= 1) {
+      return;
+    }
     btn.closest("tr")?.remove();
     onAlarmChange();
   });
@@ -199,10 +219,12 @@ export function createUI(): void {
   };
 
   exportBtn.addEventListener("click", () => {
+    const currentCfg = readCfg();
+    saveConfig(currentCfg);
     handleExportAction({
       semKey,
       startInp,
-      readConfig: readCfg,
+      readConfig: () => currentCfg,
       setStatus,
     });
   });

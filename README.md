@@ -7,15 +7,6 @@
 - 安装依赖：`pnpm install`
 - 启动开发：`pnpm dev`
 - 生产构建：`pnpm build`
-- 运行测试：`pnpm test:run`
-- 覆盖率：`pnpm test:coverage`
-
-## 测试
-
-- 测试框架使用 Vitest
-- `tests/unit` 放纯函数与 ICS 生成测试
-- `tests/integration` 放基于 HTML fixture 的提取与导出链路测试
-- `tests/fixtures/complete-form.html` 是完整字段课表样本，用于验证 `学分`、`周学时`、RRULE 等回归场景
 
 ### 关于 `pnpm dev` 的说明
 
@@ -59,6 +50,6 @@
 ## 生效页面
 
 - 当前 userscript 精确匹配页面为 `*://jwgl.usst.edu.cn/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html*`
-- 代码中的课表提取逻辑依赖教务系统课表页面常见元素，例如 `#kblist_table`、`#kbgrid_table_0`、`#tb`、`#xnm`、`#xqm`
+- 当前课表提取逻辑只使用表格视图中的课表元素，例如 `#kbgrid_table_0`、`#tb`、`#xnm`、`#xqm`
 
 如果实际课表页 URL 发生变化，可以调整 [vite.config.ts](vite.config.ts) 中的 `match` 配置。

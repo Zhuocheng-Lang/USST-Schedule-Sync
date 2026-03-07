@@ -135,7 +135,7 @@ export function createDialogElements(
     const btn = Object.assign(document.createElement("button"), {
       type: "button",
       id: `ics-tab-btn-${id}`,
-      className: cx(styles.tabButton, isActive && styles.active),
+      className: cx(styles.tabButton, isActive && styles.tabButtonActive),
       textContent: label,
     });
     btn.dataset.tab = id;
@@ -151,12 +151,14 @@ export function createDialogElements(
   });
 
   const panelExport = Object.assign(document.createElement("div"), {
-    className: cx(styles.panel, styles.active),
+    className: cx(styles.panel, styles.panelActive),
     id: "ics-tab-export",
   });
   panelExport.dataset.role = "tab-panel";
   panelExport.setAttribute("role", "tabpanel");
   panelExport.setAttribute("aria-labelledby", "ics-tab-btn-export");
+  panelExport.setAttribute("aria-hidden", "false");
+  panelExport.hidden = false;
 
   const twoCol = document.createElement("div");
   twoCol.className = styles.twoColumn;
@@ -205,6 +207,8 @@ export function createDialogElements(
   panelSchedule.dataset.role = "tab-panel";
   panelSchedule.setAttribute("role", "tabpanel");
   panelSchedule.setAttribute("aria-labelledby", "ics-tab-btn-schedule");
+  panelSchedule.setAttribute("aria-hidden", "true");
+  panelSchedule.hidden = true;
 
   const rowDur = document.createElement("div");
   rowDur.className = styles.row;
@@ -266,6 +270,8 @@ export function createDialogElements(
   panelAlarm.dataset.role = "tab-panel";
   panelAlarm.setAttribute("role", "tabpanel");
   panelAlarm.setAttribute("aria-labelledby", "ics-tab-btn-alarm");
+  panelAlarm.setAttribute("aria-hidden", "true");
+  panelAlarm.hidden = true;
 
   const alarmTip = Object.assign(document.createElement("div"), {
     className: cx(styles.tip, styles.alarmTip),

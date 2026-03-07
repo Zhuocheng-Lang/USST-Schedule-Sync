@@ -7,10 +7,7 @@ import { styles } from "../ui/css";
 import { injectTriggerButton } from "../ui/toolbar";
 
 function isTimetableReady(): boolean {
-  return (
-    document.querySelector('#kblist_table tbody[id^="xq_"] .timetable_con') !==
-      null || document.querySelector("#kbgrid_table_0 .timetable_con") !== null
-  );
+  return document.querySelector('table[id^="kbgrid_table_"] .timetable_con') !== null;
 }
 
 function openDialog(): void {
@@ -23,7 +20,7 @@ function openDialog(): void {
 function earlyInjectButton(): void {
   injectTriggerButton(() => {
     if (!isTimetableReady()) {
-      alert("请先点击「查询」按钮加载课表，再导出日历。");
+      alert("请先点击「查询」按钮加载表格课表，再导出日历。");
       return;
     }
     createUI();
@@ -31,9 +28,14 @@ function earlyInjectButton(): void {
   });
 }
 
+function ensureUI(): void {
+  earlyInjectButton();
+  createUI();
+}
+
 export function init(): void {
   if (isTimetableReady()) {
-    createUI();
+    ensureUI();
     return;
   }
 
@@ -46,7 +48,7 @@ export function init(): void {
     }
     if (isTimetableReady()) {
       observer.disconnect();
-      createUI();
+      ensureUI();
     }
   });
   observer.observe(document.body, { childList: true, subtree: true });
