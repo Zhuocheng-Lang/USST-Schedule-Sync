@@ -22,7 +22,7 @@
 // ==/UserScript==
 
 (function () {
-  "use strict";
+  'use strict';
 
   const DEFAULT_PERIODS = [
     { start: "08:00" },
@@ -36,16 +36,18 @@
     { start: "15:55" },
     { start: "18:00" },
     { start: "18:50" },
-    { start: "19:40" },
+    { start: "19:40" }
   ];
   const DEFAULT_DURATION = 45;
-  const DEFAULT_ALARMS = [{ enabled: true, minutes: 15, action: "DISPLAY" }];
+  const DEFAULT_ALARMS = [
+    { enabled: true, minutes: 15, action: "DISPLAY" }
+  ];
   const NS = "ics_";
   function defaultConfig() {
     return {
       duration: DEFAULT_DURATION,
       periods: DEFAULT_PERIODS.map((period) => ({ ...period })),
-      alarms: DEFAULT_ALARMS.map((alarm) => ({ ...alarm })),
+      alarms: DEFAULT_ALARMS.map((alarm) => ({ ...alarm }))
     };
   }
   function downloadICS(content, filename) {
@@ -54,7 +56,7 @@
     try {
       const anchor = Object.assign(document.createElement("a"), {
         href: url,
-        download: filename,
+        download: filename
       });
       anchor.style.display = "none";
       document.body.appendChild(anchor);
@@ -68,15 +70,13 @@
     const [hours, minutes] = hhmm.split(":").map(Number);
     const total = Math.min(
       (hours ?? 0) * 60 + (minutes ?? 0) + mins,
-      23 * 60 + 59,
+      23 * 60 + 59
     );
     return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
   }
   function getPeriodTime(periods, duration, no) {
     const period = periods[no - 1];
-    return period
-      ? { start: period.start, end: addMinutes(period.start, duration) }
-      : null;
+    return period ? { start: period.start, end: addMinutes(period.start, duration) } : null;
   }
   function toICSDateTime(dateISO, hhmm) {
     return dateISO.replace(/-/g, "") + "T" + hhmm.replace(":", "") + "00";
@@ -88,13 +88,13 @@
     return [
       base.getFullYear(),
       String(base.getMonth() + 1).padStart(2, "0"),
-      String(base.getDate()).padStart(2, "0"),
+      String(base.getDate()).padStart(2, "0")
     ].join("-");
   }
   function uuidV4() {
     const bytes = crypto.getRandomValues(new Uint8Array(16));
-    bytes[6] = (bytes[6] & 15) | 64;
-    bytes[8] = (bytes[8] & 63) | 128;
+    bytes[6] = bytes[6] & 15 | 64;
+    bytes[8] = bytes[8] & 63 | 128;
     const hex = [...bytes].map((value) => value.toString(16).padStart(2, "0"));
     return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
   }
@@ -114,22 +114,14 @@
     const [, startWeek, endWeek, parity] = range;
     const weeks = [];
     for (let week = Number(startWeek); week <= Number(endWeek); week++) {
-      if (
-        !parity ||
-        (parity === "单" && week % 2 === 1) ||
-        (parity === "双" && week % 2 === 0)
-      ) {
+      if (!parity || parity === "单" && week % 2 === 1 || parity === "双" && week % 2 === 0) {
         weeks.push(week);
       }
     }
     return weeks;
   }
   function escapeICSText(text) {
-    return String(text)
-      .replace(/\\/g, "\\\\")
-      .replace(/;/g, "\\;")
-      .replace(/,/g, "\\,")
-      .replace(/\r\n|\r|\n/g, "\\n");
+    return String(text).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
   }
   function foldLine(line) {
     const encoder = new TextEncoder();
@@ -238,11 +230,7 @@
         if (!titleEl) {
           continue;
         }
-        const name =
-          titleEl.textContent
-            ?.trim()
-            .replace(/[★○◆◇●]/g, "")
-            .trim() ?? "";
+        const name = titleEl.textContent?.trim().replace(/[★○◆◇●]/g, "").trim() ?? "";
         if (!name) {
           continue;
         }
@@ -250,18 +238,13 @@
         const tchrEl = con.querySelector(".glyphicon-user");
         courses.push({
           name,
-          location: locEl
-            ? (locEl.parentElement?.textContent?.trim().replace(/\s+/g, " ") ??
-              "")
-            : "",
-          teacher: tchrEl
-            ? (tchrEl.parentElement?.textContent?.trim() ?? "")
-            : "",
+          location: locEl ? locEl.parentElement?.textContent?.trim().replace(/\s+/g, " ") ?? "" : "",
+          teacher: tchrEl ? tchrEl.parentElement?.textContent?.trim() ?? "" : "",
           dow,
           pStart,
           pEnd,
           weeks,
-          rawWeeks,
+          rawWeeks
         });
       }
     }
@@ -272,21 +255,15 @@
     if (!titleEl) {
       return null;
     }
-    const name =
-      titleEl.textContent
-        ?.trim()
-        .replace(/[★○◆◇●]/g, "")
-        .trim() ?? "";
+    const name = titleEl.textContent?.trim().replace(/[★○◆◇●]/g, "").trim() ?? "";
     if (!name) {
       return null;
     }
-    const pText = Array.from(con.querySelectorAll("p"))
-      .map((p) => p.textContent?.replace(/\s+/g, " ").trim() ?? "")
-      .join(" ");
+    const pText = Array.from(con.querySelectorAll("p")).map((p) => p.textContent?.replace(/\s+/g, " ").trim() ?? "").join(" ");
     let rawWeeks = "";
     let weeks = [];
     const labelledMatch = pText.match(
-      /周数[：:]\s*([^\s校区上下]+周[（(双单）)]*)/,
+      /周数[：:]\s*([^\s校区上下]+周[（(双单）)]*)/
     );
     if (labelledMatch) {
       rawWeeks = labelledMatch[1]?.trim() ?? "";
@@ -312,7 +289,7 @@
       pStart,
       pEnd,
       weeks,
-      rawWeeks,
+      rawWeeks
     };
   }
   const VTIMEZONE_SHANGHAI = [
@@ -325,11 +302,10 @@
     "TZNAME:CST",
     "DTSTART:19700101T000000",
     "END:STANDARD",
-    "END:VTIMEZONE",
+    "END:VTIMEZONE"
   ].join("\r\n");
   function generateICS(courses, firstMonday, tzid, cfg) {
-    const dtstamp =
-      new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
+    const dtstamp = ( new Date()).toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
     const activeAlarms = cfg.alarms.filter((alarm) => alarm.enabled);
     const lines = [
       "BEGIN:VCALENDAR",
@@ -339,7 +315,7 @@
       "METHOD:PUBLISH",
       "X-WR-CALNAME:上理工课表",
       "X-WR-TIMEZONE:" + tzid,
-      "X-WR-CALDESC:由 USST 课表导出工具生成",
+      "X-WR-CALDESC:由 USST 课表导出工具生成"
     ];
     if (tzid === "Asia/Shanghai") {
       for (const line of VTIMEZONE_SHANGHAI.split("\r\n")) {
@@ -348,11 +324,7 @@
     }
     let eventCount = 0;
     for (const course of courses) {
-      const startPeriod = getPeriodTime(
-        cfg.periods,
-        cfg.duration,
-        course.pStart,
-      );
+      const startPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pStart);
       const endPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pEnd);
       if (!startPeriod || !endPeriod) {
         continue;
@@ -363,16 +335,14 @@
         lines.push(`UID:${uuidV4()}@usst.timetable`);
         lines.push(`DTSTAMP:${dtstamp}`);
         lines.push(
-          `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`,
+          `DTSTART;TZID=${tzid}:${toICSDateTime(dateStr, startPeriod.start)}`
         );
-        lines.push(
-          `DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`,
-        );
+        lines.push(`DTEND;TZID=${tzid}:${toICSDateTime(dateStr, endPeriod.end)}`);
         lines.push(`SUMMARY:${escapeICSText(course.name)}`);
         lines.push(`LOCATION:${escapeICSText(course.location)}`);
         lines.push(
           `DESCRIPTION:${escapeICSText(`教师：${course.teacher}
-第${week}周（${course.rawWeeks}）`)}`,
+第${week}周（${course.rawWeeks}）`)}`
         );
         for (const alarm of activeAlarms) {
           lines.push("BEGIN:VALARM");
@@ -380,7 +350,7 @@
           lines.push(`TRIGGER:-PT${alarm.minutes}M`);
           if (alarm.action === "DISPLAY") {
             lines.push(
-              `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`,
+              `DESCRIPTION:${escapeICSText(`${course.name} 还有 ${alarm.minutes} 分钟`)}`
             );
           } else {
             lines.push("ATTACH;VALUE=URI:Basso");
@@ -451,41 +421,39 @@
       return [
         date.getFullYear(),
         String(date.getMonth() + 1).padStart(2, "0"),
-        String(date.getDate()).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0")
       ].join("-");
     }
-    return quarter === 1
-      ? nthMonday(year ?? 0, 8, 1)
-      : nthMonday((year ?? 0) + 1, 1, 3);
+    return quarter === 1 ? nthMonday(year ?? 0, 8, 1) : nthMonday((year ?? 0) + 1, 1, 3);
   }
   const ACTION_LABELS = {
     DISPLAY: "静默通知",
-    AUDIO: "响铃提醒",
+    AUDIO: "响铃提醒"
   };
   function makePeriodRow(index, start, duration) {
     const tr = document.createElement("tr");
     tr.dataset.idx = String(index);
     const tdNo = Object.assign(document.createElement("td"), {
       className: "tc-no",
-      textContent: String(index + 1),
+      textContent: String(index + 1)
     });
     const input = Object.assign(document.createElement("input"), {
       type: "time",
       className: "ics-time-inp period-start",
       step: "60",
-      value: start,
+      value: start
     });
     const tdInp = document.createElement("td");
     tdInp.appendChild(input);
     const tdEnd = Object.assign(document.createElement("td"), {
       className: "tc-end",
-      textContent: "→ " + addMinutes(start, duration),
+      textContent: "→ " + addMinutes(start, duration)
     });
     const delBtn = Object.assign(document.createElement("button"), {
       type: "button",
       className: "ics-del-btn",
       title: "删除此节",
-      textContent: "×",
+      textContent: "×"
     });
     const tdDel = document.createElement("td");
     tdDel.appendChild(delBtn);
@@ -502,14 +470,14 @@
     const chk = Object.assign(document.createElement("input"), {
       type: "checkbox",
       className: "alarm-enabled",
-      checked: alarm.enabled,
+      checked: alarm.enabled
     });
     const track = Object.assign(document.createElement("span"), {
-      className: "ics-toggle-track",
+      className: "ics-toggle-track"
     });
     toggle.append(chk, track);
     const tdToggle = Object.assign(document.createElement("td"), {
-      className: "tc-toggle",
+      className: "tc-toggle"
     });
     tdToggle.appendChild(toggle);
     const numInp = Object.assign(document.createElement("input"), {
@@ -517,17 +485,17 @@
       className: "ics-mini-num alarm-minutes",
       min: "1",
       max: "1440",
-      value: String(alarm.minutes),
+      value: String(alarm.minutes)
     });
     const tdMin = document.createElement("td");
     tdMin.append(numInp, " 分钟前");
     const select = Object.assign(document.createElement("select"), {
-      className: "ics-mini-sel alarm-action",
+      className: "ics-mini-sel alarm-action"
     });
     for (const [value, label] of Object.entries(ACTION_LABELS)) {
       const option = Object.assign(document.createElement("option"), {
         value,
-        textContent: label,
+        textContent: label
       });
       if (value === alarm.action) {
         option.selected = true;
@@ -540,7 +508,7 @@
       type: "button",
       className: "ics-del-btn alarm-del-btn",
       title: "删除此规则",
-      textContent: "×",
+      textContent: "×"
     });
     const tdDel = document.createElement("td");
     tdDel.appendChild(delBtn);
@@ -763,19 +731,18 @@ word-break: break-word;
     }
     const cfg = getConfig();
     const semKey = detectSemesterKey();
-    const defaultDate =
-      guessSemesterStart(semKey) ?? `${new Date().getFullYear()}-02-17`;
+    const defaultDate = guessSemesterStart(semKey) ?? `${( new Date()).getFullYear()}-02-17`;
     const styleEl = Object.assign(document.createElement("style"), {
-      textContent: CSS,
+      textContent: CSS
     });
     document.head.appendChild(styleEl);
     const backdrop = Object.assign(document.createElement("div"), {
-      id: "ics-backdrop",
+      id: "ics-backdrop"
     });
     backdrop.setAttribute("aria-hidden", "true");
     document.body.appendChild(backdrop);
     const dialog = Object.assign(document.createElement("div"), {
-      id: "ics-dialog",
+      id: "ics-dialog"
     });
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
@@ -787,7 +754,7 @@ word-break: break-word;
       type: "button",
       className: "ics-close-btn",
       title: "关闭 (Esc)",
-      textContent: "✕",
+      textContent: "✕"
     });
     header.appendChild(closeBtn);
     const tabBar = document.createElement("div");
@@ -796,13 +763,13 @@ word-break: break-word;
     const tabDefs = [
       { id: "export", label: "导出设置" },
       { id: "schedule", label: "节次时间" },
-      { id: "alarm", label: "课前提醒" },
+      { id: "alarm", label: "课前提醒" }
     ];
     for (const { id, label } of tabDefs) {
       const btn = Object.assign(document.createElement("button"), {
         type: "button",
         className: "ics-tab-btn" + (id === "export" ? " active" : ""),
-        textContent: label,
+        textContent: label
       });
       btn.dataset.tab = id;
       btn.setAttribute("role", "tab");
@@ -811,11 +778,11 @@ word-break: break-word;
       tabBar.appendChild(btn);
     }
     const panelsEl = Object.assign(document.createElement("div"), {
-      className: "ics-panels",
+      className: "ics-panels"
     });
     const panelExport = Object.assign(document.createElement("div"), {
       className: "ics-panel active",
-      id: "ics-tab-export",
+      id: "ics-tab-export"
     });
     panelExport.setAttribute("role", "tabpanel");
     panelExport.setAttribute("aria-labelledby", "tab-export");
@@ -830,32 +797,32 @@ word-break: break-word;
       type: "date",
       id: "ics-semester-start",
       className: "ics-field",
-      value: defaultDate,
+      value: defaultDate
     });
     startInp.setAttribute("aria-required", "true");
     const tipDate = Object.assign(document.createElement("div"), {
       className: "ics-tip",
-      textContent: "第一教学周的周一日期",
+      textContent: "第一教学周的周一日期"
     });
     rowDate.append(lblDate, startInp, tipDate);
     const rowTz = document.createElement("div");
     rowTz.className = "ics-row";
     const lblTz = Object.assign(document.createElement("div"), {
       className: "ics-label",
-      textContent: "时区",
+      textContent: "时区"
     });
     const tzSel = Object.assign(document.createElement("select"), {
       id: "ics-tzid",
-      className: "ics-field",
+      className: "ics-field"
     });
     for (const [value, label] of [
       ["Asia/Shanghai", "北京时间 (CST +8)"],
       ["Asia/Hong_Kong", "香港 (HKT +8)"],
-      ["Asia/Taipei", "台北 (CST +8)"],
+      ["Asia/Taipei", "台北 (CST +8)"]
     ]) {
       const option = Object.assign(document.createElement("option"), {
         value,
-        textContent: label,
+        textContent: label
       });
       if (value === "Asia/Shanghai") {
         option.selected = true;
@@ -866,16 +833,16 @@ word-break: break-word;
     twoCol.append(rowDate, rowTz);
     const previewHd = Object.assign(document.createElement("div"), {
       className: "ics-section-hd",
-      textContent: "节次时间预览",
+      textContent: "节次时间预览"
     });
     const previewList = Object.assign(document.createElement("ul"), {
       className: "ics-preview",
-      id: "ics-preview-list",
+      id: "ics-preview-list"
     });
     panelExport.append(twoCol, previewHd, previewList);
     const panelSchedule = Object.assign(document.createElement("div"), {
       className: "ics-panel",
-      id: "ics-tab-schedule",
+      id: "ics-tab-schedule"
     });
     panelSchedule.setAttribute("role", "tabpanel");
     panelSchedule.setAttribute("aria-labelledby", "tab-schedule");
@@ -883,7 +850,7 @@ word-break: break-word;
     rowDur.className = "ics-row";
     const lblDur = Object.assign(document.createElement("div"), {
       className: "ics-label",
-      textContent: "每节课时长（分钟）",
+      textContent: "每节课时长（分钟）"
     });
     const durInp = Object.assign(document.createElement("input"), {
       type: "number",
@@ -891,52 +858,52 @@ word-break: break-word;
       className: "ics-field",
       min: "1",
       max: "240",
-      value: String(cfg.duration),
+      value: String(cfg.duration)
     });
     const tipDur = Object.assign(document.createElement("div"), {
       className: "ics-tip",
-      textContent: "结束时间 = 开始时间 + 时长，课间休息不需要单独填写",
+      textContent: "结束时间 = 开始时间 + 时长，课间休息不需要单独填写"
     });
     rowDur.append(lblDur, durInp, tipDur);
     const scheduleHd = Object.assign(document.createElement("div"), {
       className: "ics-section-hd",
-      textContent: "各节次开始时间",
+      textContent: "各节次开始时间"
     });
     const periodTbl = document.createElement("table");
     periodTbl.className = "ics-tbl";
     periodTbl.innerHTML = `<thead><tr><th>节</th><th>开始</th><th>结束</th><th></th></tr></thead>`;
     const periodTb = document.createElement("tbody");
     periodTb.id = "ics-period-tbody";
-    cfg.periods.forEach((period, index) =>
-      periodTb.appendChild(makePeriodRow(index, period.start, cfg.duration)),
+    cfg.periods.forEach(
+      (period, index) => periodTb.appendChild(makePeriodRow(index, period.start, cfg.duration))
     );
     periodTbl.appendChild(periodTb);
     const addPeriodBtn = Object.assign(document.createElement("button"), {
       type: "button",
       id: "ics-add-period-btn",
       className: "ics-add-btn",
-      textContent: "＋ 添加节次",
+      textContent: "＋ 添加节次"
     });
     const tipSchedule = Object.assign(document.createElement("div"), {
       className: "ics-tip",
       style: "margin-top:8px",
-      textContent: "配置自动保存，刷新页面后仍然有效",
+      textContent: "配置自动保存，刷新页面后仍然有效"
     });
     panelSchedule.append(
       rowDur,
       scheduleHd,
       periodTbl,
       addPeriodBtn,
-      tipSchedule,
+      tipSchedule
     );
     const panelAlarm = Object.assign(document.createElement("div"), {
       className: "ics-panel",
-      id: "ics-tab-alarm",
+      id: "ics-tab-alarm"
     });
     panelAlarm.setAttribute("role", "tabpanel");
     panelAlarm.setAttribute("aria-labelledby", "tab-alarm");
     const alarmTip = Object.assign(document.createElement("div"), {
-      className: "ics-tip",
+      className: "ics-tip"
     });
     alarmTip.style.marginBottom = "12px";
     alarmTip.innerHTML = `每条规则在每个日历事件中写入一个 <code>VALARM</code>，可叠加多条。<br><b>静默通知</b>：仅弹通知横幅，不响铃（<i>推荐</i>）。<br><b>响铃提醒</b>：播放系统提示音（Apple Calendar / Outlook 支持）。<br>全部关闭 = 不写入任何提醒。`;
@@ -945,15 +912,15 @@ word-break: break-word;
     alarmTbl.innerHTML = `<thead><tr><th>开启</th><th>提前时间</th><th>提醒方式</th><th></th></tr></thead>`;
     const alarmTb = document.createElement("tbody");
     alarmTb.id = "ics-alarm-tbody";
-    cfg.alarms.forEach((alarm, index) =>
-      alarmTb.appendChild(makeAlarmRow(index, alarm)),
+    cfg.alarms.forEach(
+      (alarm, index) => alarmTb.appendChild(makeAlarmRow(index, alarm))
     );
     alarmTbl.appendChild(alarmTb);
     const addAlarmBtn = Object.assign(document.createElement("button"), {
       type: "button",
       id: "ics-add-alarm-btn",
       className: "ics-add-btn",
-      textContent: "＋ 添加提醒规则",
+      textContent: "＋ 添加提醒规则"
     });
     panelAlarm.append(alarmTip, alarmTbl, addAlarmBtn);
     panelsEl.append(panelExport, panelSchedule, panelAlarm);
@@ -962,11 +929,11 @@ word-break: break-word;
     const exportBtn = Object.assign(document.createElement("button"), {
       type: "button",
       id: "ics-export-btn",
-      textContent: "⬇ 导出 .ics",
+      textContent: "⬇ 导出 .ics"
     });
     const statusEl = Object.assign(document.createElement("div"), {
       id: "ics-status",
-      className: "ics-inf",
+      className: "ics-inf"
     });
     statusEl.setAttribute("aria-live", "polite");
     footer.append(exportBtn, statusEl);
@@ -1000,13 +967,15 @@ word-break: break-word;
       fresh.addEventListener("click", openDialog);
     }
     tabBar.addEventListener("click", (event) => {
-      const btn = event.target.closest(".ics-tab-btn");
+      const btn = event.target.closest(
+        ".ics-tab-btn"
+      );
       if (!btn) {
         return;
       }
       const tabId = btn.dataset.tab;
       for (const tabButton of Array.from(
-        tabBar.querySelectorAll(".ics-tab-btn"),
+        tabBar.querySelectorAll(".ics-tab-btn")
       )) {
         const active = tabButton.dataset.tab === tabId;
         tabButton.classList.toggle("active", active);
@@ -1022,25 +991,27 @@ word-break: break-word;
     function readPeriodCfg() {
       return {
         duration: Math.max(1, parseInt(durInp.value, 10) || DEFAULT_DURATION),
-        periods: Array.from(periodTb.querySelectorAll("tr[data-idx]")).map(
-          (tr) => ({
-            start: tr.querySelector(".period-start")?.value ?? "08:00",
-          }),
-        ),
+        periods: Array.from(
+          periodTb.querySelectorAll("tr[data-idx]")
+        ).map((tr) => ({
+          start: tr.querySelector(".period-start")?.value ?? "08:00"
+        }))
       };
     }
     function readAlarms() {
-      return Array.from(alarmTb.querySelectorAll("tr[data-alarm-idx]")).map(
-        (tr) => ({
-          enabled: tr.querySelector(".alarm-enabled")?.checked ?? false,
-          minutes: Math.max(
-            1,
-            parseInt(tr.querySelector(".alarm-minutes")?.value ?? "15", 10) ||
-              15,
-          ),
-          action: tr.querySelector(".alarm-action")?.value ?? "DISPLAY",
-        }),
-      );
+      return Array.from(
+        alarmTb.querySelectorAll("tr[data-alarm-idx]")
+      ).map((tr) => ({
+        enabled: tr.querySelector(".alarm-enabled")?.checked ?? false,
+        minutes: Math.max(
+          1,
+          parseInt(
+            tr.querySelector(".alarm-minutes")?.value ?? "15",
+            10
+          ) || 15
+        ),
+        action: tr.querySelector(".alarm-action")?.value ?? "DISPLAY"
+      }));
     }
     const readCfg = () => ({ ...readPeriodCfg(), alarms: readAlarms() });
     function refreshPeriodTable({ duration }) {
@@ -1057,13 +1028,16 @@ word-break: break-word;
         }
       });
     }
-    function refreshPreview({ periods, duration }) {
+    function refreshPreview({
+      periods,
+      duration
+    }) {
       previewList.replaceChildren(
         ...periods.map((period, index) => {
           const li = document.createElement("li");
           li.innerHTML = `<span class="pn">${index + 1}</span><span class="pt">${period.start}</span><span class="pe">→ ${addMinutes(period.start, duration)}</span>`;
           return li;
-        }),
+        })
       );
     }
     function refreshAlarmRows() {
@@ -1114,10 +1088,7 @@ word-break: break-word;
     });
     alarmTb.addEventListener("change", (event) => {
       const target = event.target;
-      if (
-        target.classList.contains("alarm-enabled") ||
-        target.classList.contains("alarm-action")
-      ) {
+      if (target.classList.contains("alarm-enabled") || target.classList.contains("alarm-action")) {
         onAlarmChange();
       }
     });
@@ -1137,7 +1108,7 @@ word-break: break-word;
     addAlarmBtn.addEventListener("click", () => {
       const index = alarmTb.querySelectorAll("tr").length;
       alarmTb.appendChild(
-        makeAlarmRow(index, { enabled: true, minutes: 15, action: "DISPLAY" }),
+        makeAlarmRow(index, { enabled: true, minutes: 15, action: "DISPLAY" })
       );
       onAlarmChange();
     });
@@ -1159,7 +1130,7 @@ word-break: break-word;
         const dayNames = "日一二三四五六";
         setStatus(
           `⚠️ ${semStart} 是星期${dayNames[weekDay]}，请填写周一的日期`,
-          "ics-err",
+          "ics-err"
         );
         startInp.focus();
         return;
@@ -1177,7 +1148,7 @@ word-break: break-word;
             courses,
             semStart,
             tzid,
-            currentCfg,
+            currentCfg
           );
           const filename = `上理工课表_${semStart}.ics`;
           downloadICS(ics, filename);
@@ -1185,17 +1156,17 @@ word-break: break-word;
             saveSemStart(semKey, semStart);
           }
           const alarmCount = currentCfg.alarms.filter(
-            (alarm) => alarm.enabled,
+            (alarm) => alarm.enabled
           ).length;
           const alarmSummary = alarmCount ? `${alarmCount} 条提醒` : "无提醒";
           setStatus(
             `✅ ${courses.length} 门课 · ${eventCount} 个事件 · ${alarmSummary}`,
-            "ics-ok",
+            "ics-ok"
           );
         } catch (error) {
           setStatus(
             `❌ 导出失败：${error instanceof Error ? error.message : String(error)}`,
-            "ics-err",
+            "ics-err"
           );
           console.error("[ICS Exporter]", error);
         }
@@ -1218,8 +1189,7 @@ word-break: break-word;
     btn.appendChild(document.createTextNode(" 导出日历"));
     btn.addEventListener("click", onClick);
     const pdfBtn = document.getElementById("shcPDF");
-    const toolbar =
-      document.getElementById("tb") ?? document.querySelector(".btn-toolbar");
+    const toolbar = document.getElementById("tb") ?? document.querySelector(".btn-toolbar");
     if (pdfBtn) {
       pdfBtn.before(btn);
     } else if (toolbar) {
@@ -1230,18 +1200,13 @@ word-break: break-word;
     }
   }
   function isTimetableReady() {
-    return (
-      document.querySelector(
-        '#kblist_table tbody[id^="xq_"] .timetable_con',
-      ) !== null ||
-      document.querySelector("#kbgrid_table_0 .timetable_con") !== null
-    );
+    return document.querySelector('#kblist_table tbody[id^="xq_"] .timetable_con') !== null || document.querySelector("#kbgrid_table_0 .timetable_con") !== null;
   }
   function earlyInjectButton() {
     if (!document.getElementById("ics-btn-style")) {
       const style = Object.assign(document.createElement("style"), {
         id: "ics-btn-style",
-        textContent: CSS_BUTTON_ONLY,
+        textContent: CSS_BUTTON_ONLY
       });
       document.head.appendChild(style);
     }
@@ -1259,10 +1224,7 @@ word-break: break-word;
     createUI();
   } else {
     const observer = new MutationObserver(() => {
-      if (
-        document.getElementById("tb") &&
-        !document.getElementById("ics-trigger-btn")
-      ) {
+      if (document.getElementById("tb") && !document.getElementById("ics-trigger-btn")) {
         earlyInjectButton();
       }
       if (isTimetableReady()) {
@@ -1275,4 +1237,5 @@ word-break: break-word;
       earlyInjectButton();
     }
   }
+
 })();
