@@ -2,10 +2,16 @@
 //  core/extraction/extractor.ts - 从教务系统的 DOM 中提取课程信息
 // ════════════════════════════════════════════════════════════════════════════
 
+import { logger } from "../../logging";
 import type { Course } from "../../types";
 import { normalizeText, parseWeeks } from "../../utils";
 
 type ExtractedCourse = Course;
+const extractionLogger = logger.child("core.extraction");
+
+export interface ExtractionOptions {
+  traceId?: string;
+}
 
 const DETAIL_LABELS = [
   "课程学时组成",
@@ -38,8 +44,34 @@ const TRAILING_DETAIL_PATTERN = new RegExp(
   `\\s*(?:${DETAIL_END_LABELS}|周次|周数)\\s*[：:].*$`,
 );
 
-export function extractCourses(): Course[] {
-  return dedupeCourses(extractFromGrid());
+export function extractCourses(options: ExtractionOptions = {}): Course[] {
+  const gridCount = document.querySelectorAll(
+    'table[id^="kbgrid_table_"]',
+  ).length;
+  const extracted = dedupeCourses(extractFromGrid());
+
+  if (!gridCount) {
+    extractionLogger.warn("未找到课表网格容器", {
+      traceId: options.traceId,
+      context: { selector: 'table[id^="kbgrid_table_"]' },
+    });
+    return extracted;
+  }
+
+  if (!extracted.length) {
+    extractionLogger.warn("课表提取完成，但未发现可导出的课程", {
+      traceId: options.traceId,
+      context: { gridCount },
+    });
+    return extracted;
+  }
+
+  extractionLogger.info("课表提取完成", {
+    traceId: options.traceId,
+    context: { gridCount, courseCount: extracted.length },
+  });
+
+  return extracted;
 }
 
 function extractFromGrid(): ExtractedCourse[] {

@@ -46,6 +46,7 @@
 - 项目使用 Vite 和 vite-plugin-monkey 构建 userscript
 - 当前脚本入口位于 [src/main.ts](src/main.ts)
 - 课表提取、ICS 生成、配置存储和导出对话框均已从旧版脚本迁移到 [src](src)
+- 本地存储现在统一使用带顶层 `version` 的 envelope 格式，涵盖 config 与 semstart；旧的未版本化本地值不会自动迁移，config 会回退默认配置，semstart 会被忽略
 
 ## 生效页面
 

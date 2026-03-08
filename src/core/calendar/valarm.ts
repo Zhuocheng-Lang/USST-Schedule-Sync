@@ -1,8 +1,10 @@
 import type {
   ReminderDeliveryKind,
+  ReminderPresetId,
   ReminderProgram,
   ReminderRule,
 } from "../../types";
+import { summarizeReminderProgram } from "../../config";
 import { escapeICSText } from "../../utils";
 
 export interface ReminderEventContext {
@@ -21,9 +23,13 @@ export interface ReminderCompileResult {
   nodes: CompiledReminderAlarm[];
   lines: string[];
   stats: {
+    presetId: ReminderPresetId;
+    presetLabel: string;
     totalRuleCount: number;
     activeRuleCount: number;
+    alarmsPerEvent: number;
     emittedAlarmCount: number;
+    activeRuleDescriptions: string[];
   };
 }
 
@@ -100,6 +106,7 @@ export function compileReminderProgram(
   program: ReminderProgram,
   context: ReminderEventContext,
 ): ReminderCompileResult {
+  const summary = summarizeReminderProgram(program);
   const nodes = program.rules
     .map((rule) => compileReminderRule(rule, context))
     .filter((node): node is CompiledReminderAlarm => node !== null);
@@ -108,9 +115,13 @@ export function compileReminderProgram(
     nodes,
     lines: nodes.flatMap((node) => node.lines),
     stats: {
-      totalRuleCount: program.rules.length,
-      activeRuleCount: program.rules.filter((rule) => rule.isEnabled).length,
+      presetId: summary.presetId,
+      presetLabel: summary.presetLabel,
+      totalRuleCount: summary.totalRuleCount,
+      activeRuleCount: summary.activeRuleCount,
+      alarmsPerEvent: nodes.length,
       emittedAlarmCount: nodes.length,
+      activeRuleDescriptions: summary.activeRuleDescriptions,
     },
   };
 }

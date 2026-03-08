@@ -23,14 +23,23 @@ afterEach(() => {
 describe("complete-form extraction to ICS", () => {
   it("keeps teacher and weeks separated and writes default VALARM blocks", () => {
     const courses = extractCourses();
-    const algorithm = courses.find((course) => course.name === "算法导论A(13007630)");
+    const algorithm = courses.find(
+      (course) => course.name === "算法导论A(13007630)",
+    );
 
     expect(algorithm).toBeDefined();
     expect(algorithm?.location).toBe("军工路校区 三教405");
     expect(algorithm?.teacher).toBe("宁爱兵(副教授)(主讲)");
     expect(algorithm?.rawWeeks).toBe("1-16周");
 
-    const { ics } = generateICS(courses, "2026-03-02", defaultConfig());
+    const config = defaultConfig();
+    const { ics } = generateICS(
+      courses,
+      "2026-03-02",
+      config.periods,
+      config.duration,
+      config.reminderProgram,
+    );
 
     expect(ics).toContain("BEGIN:VALARM");
     expect(ics).toContain("TRIGGER;RELATED=START;VALUE=DURATION:-PT15M");

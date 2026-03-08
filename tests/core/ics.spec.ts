@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultConfig } from "../../src/config/defaults";
+import {
+  DEFAULT_DURATION,
+  DEFAULT_PERIODS,
+  DEFAULT_REMINDER_PROGRAM,
+} from "../../src/config";
 import { generateICS } from "../../src/core/calendar/ics";
 import { toReminderTrigger } from "../../src/core/calendar/valarm";
-import type { Config, Course } from "../../src/types";
+import type { Course, ReminderProgram } from "../../src/types";
 
 const baseCourse: Course = {
   name: "软件工程",
@@ -16,38 +20,48 @@ const baseCourse: Course = {
   rawWeeks: "1-3周",
 };
 
-function makeConfig(overrides?: Partial<Config>): Config {
-  return {
-    ...defaultConfig(),
-    ...overrides,
-  };
+function callGenerateICS(
+  courses: Course[],
+  reminderProgram: ReminderProgram = DEFAULT_REMINDER_PROGRAM,
+  firstMonday = "2026-03-02",
+) {
+  return generateICS(
+    courses,
+    firstMonday,
+    DEFAULT_PERIODS,
+    DEFAULT_DURATION,
+    reminderProgram,
+  );
 }
+
+const disabledReminderProgram = {
+  version: 3 as const,
+  presetId: "disabled" as const,
+  rules: [],
+};
 
 describe("generateICS alarms", () => {
   it("exports display and audio alarms with RFC-compatible triggers", () => {
-    const config = makeConfig({
-      reminderProgram: {
-        version: 2,
-        rules: [
-          {
-            id: "display-90",
-            isEnabled: true,
-            offset: { minutesBeforeStart: 90 },
-            delivery: { kind: "DISPLAY" },
-            template: { kind: "course-start-countdown" },
-          },
-          {
-            id: "audio-1565",
-            isEnabled: true,
-            offset: { minutesBeforeStart: 1565 },
-            delivery: { kind: "AUDIO" },
-            template: { kind: "course-start-countdown" },
-          },
-        ],
-      },
+    const { ics, reminderSummary } = callGenerateICS([baseCourse], {
+      version: 3,
+      presetId: "custom",
+      rules: [
+        {
+          id: "display-90",
+          isEnabled: true,
+          offset: { minutesBeforeStart: 90 },
+          delivery: { kind: "DISPLAY" },
+          template: { kind: "course-start-countdown" },
+        },
+        {
+          id: "audio-1565",
+          isEnabled: true,
+          offset: { minutesBeforeStart: 1565 },
+          delivery: { kind: "AUDIO" },
+          template: { kind: "course-start-countdown" },
+        },
+      ],
     });
-
-    const { ics } = generateICS([baseCourse], "2026-03-02", config);
 
     expect(ics).toContain("BEGIN:VALARM");
     expect(ics).toContain("ACTION:DISPLAY");
@@ -56,6 +70,13 @@ describe("generateICS alarms", () => {
     expect(ics).toContain("ACTION:AUDIO");
     expect(ics).toContain("TRIGGER;RELATED=START;VALUE=DURATION:-P1DT2H5M");
     expect(ics).not.toContain("ATTACH;VALUE=URI:Basso");
+    expect(reminderSummary).toMatchObject({
+      presetId: "custom",
+      presetLabel: "自定义方案",
+      activeRuleCount: 2,
+      alarmsPerEvent: 2,
+      emittedAlarmCount: 2,
+    });
   });
 
   it("formats trigger durations across minute boundaries", () => {
@@ -67,12 +88,8 @@ describe("generateICS alarms", () => {
   });
 
   it("keeps UID stable across repeated exports of the same course", () => {
-    const config = makeConfig({
-      reminderProgram: { version: 2, rules: [] },
-    });
-
-    const first = generateICS([baseCourse], "2026-03-02", config).ics;
-    const second = generateICS([baseCourse], "2026-03-02", config).ics;
+    const first = callGenerateICS([baseCourse], disabledReminderProgram).ics;
+    const second = callGenerateICS([baseCourse], disabledReminderProgram).ics;
     const firstUid = first.match(/UID:(.+)\r\n/)?.[1];
     const secondUid = second.match(/UID:(.+)\r\n/)?.[1];
 
@@ -88,7 +105,7 @@ describe("generateICS alarms", () => {
       rawWeeks: "",
     };
 
-    const { ics } = generateICS([course], "2026-03-02", makeConfig({ reminderProgram: { version: 2, rules: [] } }));
+    const { ics } = callGenerateICS([course], disabledReminderProgram);
 
     expect(ics).not.toMatch(/(?:^|\r\n)LOCATION:/);
     expect(ics).not.toContain("DESCRIPTION:教师：");
@@ -103,12 +120,10 @@ describe("generateICS alarms", () => {
       rawWeeks: "1-7周(单) 第5周停课",
     };
 
-    const { ics } = generateICS([course], "2026-03-02", makeConfig({ reminderProgram: { version: 2, rules: [] } }));
+    const { ics } = callGenerateICS([course], disabledReminderProgram);
 
     expect(ics).toContain("RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4");
-    expect(ics).toContain(
-      "EXDATE;TZID=Asia/Shanghai:20260330T080000",
-    );
+    expect(ics).toContain("EXDATE;TZID=Asia/Shanghai:20260330T080000");
   });
 
   it("uses escaped text and the normalized PRODID header", () => {
@@ -120,7 +135,7 @@ describe("generateICS alarms", () => {
       rawWeeks: "1-3周",
     };
 
-    const { ics } = generateICS([course], "2026-03-02", makeConfig({ reminderProgram: { version: 2, rules: [] } }));
+    const { ics } = callGenerateICS([course], disabledReminderProgram);
 
     expect(ics).toContain("PRODID:-//Zhuocheng Lang//USST Schedule Sync//CN");
     expect(ics).toContain(String.raw`SUMMARY:软件\,工程\;基础`);
@@ -136,51 +151,40 @@ describe("generateICS alarms", () => {
       weeks: Array.from({ length: 16 }, (_, index) => index + 1),
     };
 
-    const { ics } = generateICS([course], "2026-03-02", makeConfig());
+    const { ics } = callGenerateICS([course]);
 
     expect(ics).toContain("LOCATION:军工路校区 三教405");
-    expect(ics).toContain(
-      String.raw`DESCRIPTION:教师：宁爱兵\n周次：1-16周`,
-    );
+    expect(ics).toContain(String.raw`DESCRIPTION:教师：宁爱兵\n周次：1-16周`);
     expect(ics).toContain("BEGIN:VALARM");
   });
 
   it("omits VALARM blocks when runtime config contains no alarm rows", () => {
-    const { ics } = generateICS(
-      [baseCourse],
-      "2026-03-02",
-      makeConfig({ reminderProgram: { version: 2, rules: [] } }),
-    );
+    const { ics } = callGenerateICS([baseCourse], disabledReminderProgram);
 
     expect(ics).not.toContain("BEGIN:VALARM");
   });
 
   it("omits disabled reminders from exported events", () => {
-    const { ics } = generateICS(
-      [baseCourse],
-      "2026-03-02",
-      makeConfig({
-        reminderProgram: {
-          version: 2,
-          rules: [
-            {
-              id: "disabled-display",
-              isEnabled: false,
-              offset: { minutesBeforeStart: 15 },
-              delivery: { kind: "DISPLAY" },
-              template: { kind: "course-start-countdown" },
-            },
-            {
-              id: "disabled-audio",
-              isEnabled: false,
-              offset: { minutesBeforeStart: 30 },
-              delivery: { kind: "AUDIO" },
-              template: { kind: "course-start-countdown" },
-            },
-          ],
+    const { ics } = callGenerateICS([baseCourse], {
+      version: 3,
+      presetId: "custom",
+      rules: [
+        {
+          id: "disabled-display",
+          isEnabled: false,
+          offset: { minutesBeforeStart: 15 },
+          delivery: { kind: "DISPLAY" },
+          template: { kind: "course-start-countdown" },
         },
-      }),
-    );
+        {
+          id: "disabled-audio",
+          isEnabled: false,
+          offset: { minutesBeforeStart: 30 },
+          delivery: { kind: "AUDIO" },
+          template: { kind: "course-start-countdown" },
+        },
+      ],
+    });
 
     expect(ics).not.toContain("BEGIN:VALARM");
   });

@@ -2,9 +2,20 @@
 //  ui/dialog.ts - 导出设置对话框的构建与事件处理
 // ════════════════════════════════════════════════════════════════════════════
 
-import { getConfig, saveConfig } from "../config";
+import {
+  getDuration,
+  getPeriods,
+  getReminderProgram,
+  saveDuration,
+  savePeriods,
+  saveReminderProgram,
+} from "../config";
 import { detectSemesterKey, guessSemesterStart } from "../core";
-import type { Config } from "../types";
+import type {
+  ReminderDeliveryKind,
+  ReminderPresetId,
+  ReminderRule,
+} from "../types";
 import { addMinutes } from "../utils";
 import { cx, styles } from "./css";
 import { createDialogElements } from "./export-dialog/dom";
@@ -14,7 +25,8 @@ import {
   renderPeriodRows,
   refreshPeriodTable,
   refreshPreview,
-  renderReminderRuleRows,
+  renderReminderRuleCards,
+  renderReminderSummary,
 } from "./export-dialog/state";
 
 let syncExistingUI: (() => void) | null = null;
@@ -48,7 +60,9 @@ export function createUI(): void {
     return;
   }
 
-  const cfg = getConfig();
+  const duration = getDuration();
+  const periods = getPeriods();
+  const reminderProgram = getReminderProgram();
   const semKey = detectSemesterKey();
   const defaultDate =
     guessSemesterStart(semKey) ?? `${new Date().getFullYear()}-02-17`;
@@ -63,21 +77,48 @@ export function createUI(): void {
     durInp,
     periodTb,
     addPeriodBtn,
-    reminderRuleTb,
+    reminderPresetBar,
+    reminderSummaryEl,
+    reminderPreviewList,
+    reminderRuleList,
     addReminderRuleBtn,
     exportBtn,
     statusEl,
-  } = createDialogElements(cfg, defaultDate);
-  let store = createDialogConfigStore(cfg);
+    statusDetailBtn,
+    statusDetailEl,
+  } = createDialogElements(duration, periods, reminderProgram, defaultDate);
+  let store = createDialogConfigStore(duration, periods, reminderProgram);
+
+  function clearStatusDetail(): void {
+    statusDetailBtn.hidden = true;
+    statusDetailBtn.textContent = "查看详情";
+    statusDetailBtn.setAttribute("aria-expanded", "false");
+    statusDetailEl.hidden = true;
+    statusDetailEl.textContent = "";
+  }
 
   syncExistingUI = (): void => {
-    const latest = getConfig();
-    store = createDialogConfigStore(latest);
-    durInp.value = String(latest.duration);
-    renderPeriodRows(periodTb, latest);
-    refreshPeriodTable(periodTb, latest);
-    renderReminderRuleRows(reminderRuleTb, latest.reminderProgram.rules);
-    refreshPreview(previewList, latest);
+    const latestDuration = getDuration();
+    const latestPeriods = getPeriods();
+    const latestReminderProgram = getReminderProgram();
+    store = createDialogConfigStore(
+      latestDuration,
+      latestPeriods,
+      latestReminderProgram,
+    );
+    durInp.value = String(latestDuration);
+    renderPeriodRows(periodTb, latestPeriods, latestDuration);
+    refreshPeriodTable(periodTb, latestPeriods, latestDuration);
+    syncReminderPresetButtons(latestReminderProgram.presetId);
+    renderReminderRuleCards(reminderRuleList, latestReminderProgram.rules);
+    renderReminderSummary(
+      reminderSummaryEl,
+      reminderPreviewList,
+      latestReminderProgram,
+    );
+    syncAddReminderBtn(latestReminderProgram.rules);
+    refreshPreview(previewList, latestPeriods, latestDuration);
+    clearStatusDetail();
   };
 
   function openDialog(): void {
@@ -85,7 +126,7 @@ export function createUI(): void {
     backdrop.classList.add(styles.dialogOpen);
     dialog.classList.add(styles.dialogOpen);
     dialog.setAttribute("aria-hidden", "false");
-    refreshPreview(previewList, store.getConfig());
+    refreshPreview(previewList, store.getPeriods(), store.getDuration());
     requestAnimationFrame(() => startInp.focus());
   }
 
@@ -108,7 +149,9 @@ export function createUI(): void {
     }
   });
 
-  document.getElementById("ics-trigger-btn")?.addEventListener("click", openDialog);
+  document
+    .getElementById("ics-trigger-btn")
+    ?.addEventListener("click", openDialog);
 
   tabBar.addEventListener("click", (event) => {
     const btn = (event.target as Element).closest(
@@ -125,33 +168,70 @@ export function createUI(): void {
 
     setActiveTab(tabBar, panelsEl, tabId);
     if (tabId === "export") {
-      refreshPreview(previewList, store.getConfig());
+      refreshPreview(previewList, store.getPeriods(), store.getDuration());
     }
   });
 
-  function persistConfig(): Config {
-    const current = store.getConfig();
-    saveConfig(current);
-    return current;
+  function persistDialogState(): void {
+    saveDuration(store.getDuration());
+    savePeriods(store.getPeriods());
+    saveReminderProgram(store.getReminderProgram());
   }
 
-  function onPeriodChange(current = store.getConfig()): void {
-    saveConfig(current);
-    durInp.value = String(current.duration);
-    refreshPeriodTable(periodTb, current);
-    refreshPreview(previewList, current);
+  function onPeriodChange(): void {
+    persistDialogState();
+    const currentDuration = store.getDuration();
+    const currentPeriods = store.getPeriods();
+    durInp.value = String(currentDuration);
+    refreshPeriodTable(periodTb, currentPeriods, currentDuration);
+    refreshPreview(previewList, currentPeriods, currentDuration);
   }
 
-  function onReminderChange(current = store.getConfig()): void {
-    saveConfig(current);
-    renderReminderRuleRows(reminderRuleTb, current.reminderProgram.rules);
+  const MAX_REMINDER_RULES = 5;
+
+  function syncAddReminderBtn(rules: ReminderRule[]): void {
+    addReminderRuleBtn.disabled = rules.length >= MAX_REMINDER_RULES;
   }
 
-  refreshPreview(previewList, store.getConfig());
-  renderReminderRuleRows(reminderRuleTb, store.getConfig().reminderProgram.rules);
+  function syncReminderPresetButtons(presetId: ReminderPresetId): void {
+    for (const button of Array.from(
+      reminderPresetBar.querySelectorAll<HTMLButtonElement>(
+        '[data-role="reminder-preset"]',
+      ),
+    )) {
+      const active = button.dataset.presetId === presetId;
+      button.classList.toggle(styles.presetButtonActive, active);
+      button.setAttribute("aria-pressed", String(active));
+    }
+  }
+
+  function onReminderChange(): void {
+    persistDialogState();
+    const currentReminderProgram = store.getReminderProgram();
+    syncReminderPresetButtons(currentReminderProgram.presetId);
+    renderReminderRuleCards(reminderRuleList, currentReminderProgram.rules);
+    renderReminderSummary(
+      reminderSummaryEl,
+      reminderPreviewList,
+      currentReminderProgram,
+    );
+    syncAddReminderBtn(currentReminderProgram.rules);
+  }
+
+  refreshPreview(previewList, store.getPeriods(), store.getDuration());
+  const initialReminderProgram = store.getReminderProgram();
+  syncReminderPresetButtons(initialReminderProgram.presetId);
+  renderReminderRuleCards(reminderRuleList, initialReminderProgram.rules);
+  renderReminderSummary(
+    reminderSummaryEl,
+    reminderPreviewList,
+    initialReminderProgram,
+  );
+  syncAddReminderBtn(initialReminderProgram.rules);
 
   durInp.addEventListener("input", () => {
-    onPeriodChange(store.setDuration(durInp.value));
+    store.setDuration(durInp.value);
+    onPeriodChange();
   });
 
   periodTb.addEventListener("input", (event) => {
@@ -159,7 +239,8 @@ export function createUI(): void {
     if (target.matches('[data-role="period-start"]')) {
       const row = target.closest<HTMLTableRowElement>("tr[data-idx]");
       const index = Number.parseInt(row?.dataset.idx ?? "-1", 10);
-      onPeriodChange(store.setPeriodStart(index, target.value));
+      store.setPeriodStart(index, target.value);
+      onPeriodChange();
     }
   });
   periodTb.addEventListener("click", (event) => {
@@ -171,75 +252,84 @@ export function createUI(): void {
     }
     const row = btn.closest<HTMLTableRowElement>("tr[data-idx]");
     const index = Number.parseInt(row?.dataset.idx ?? "-1", 10);
-    const next = store.removePeriod(index);
-    renderPeriodRows(periodTb, next);
-    onPeriodChange(next);
+    store.removePeriod(index);
+    renderPeriodRows(periodTb, store.getPeriods(), store.getDuration());
+    onPeriodChange();
   });
   addPeriodBtn.addEventListener("click", () => {
-    const current = store.getConfig();
-    const lastStart = current.periods.at(-1)?.start ?? "08:00";
-    const nextStart = addMinutes(lastStart, current.duration + 10);
-    const next = store.addPeriod(nextStart);
-    renderPeriodRows(periodTb, next);
-    onPeriodChange(next);
+    const currentPeriods = store.getPeriods();
+    const currentDuration = store.getDuration();
+    const lastStart = currentPeriods.at(-1)?.start ?? "08:00";
+    const nextStart = addMinutes(lastStart, currentDuration + 10);
+    store.addPeriod(nextStart);
+    renderPeriodRows(periodTb, store.getPeriods(), store.getDuration());
+    onPeriodChange();
   });
 
-  reminderRuleTb.addEventListener("change", (event) => {
+  reminderPresetBar.addEventListener("click", (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>(
+      '[data-role="reminder-preset"]',
+    );
+    const presetId = button?.dataset.presetId as ReminderPresetId | undefined;
+    if (!presetId) {
+      return;
+    }
+    store.applyReminderPreset(presetId);
+    onReminderChange();
+  });
+
+  reminderRuleList.addEventListener("change", (event) => {
     const target = event.target as HTMLInputElement | HTMLSelectElement;
-    const row = target.closest<HTMLTableRowElement>("tr[data-reminder-rule-id]");
+    const row = target.closest<HTMLDivElement>("[data-reminder-rule-id]");
     const ruleId = row?.dataset.reminderRuleId;
     if (!ruleId) {
       return;
     }
     if (target.matches('[data-role="reminder-rule-enabled"]')) {
-      onReminderChange(
-        store.setReminderRuleEnabled(
-          ruleId,
-          (target as HTMLInputElement).checked,
-        ),
+      store.setReminderRuleEnabled(
+        ruleId,
+        (target as HTMLInputElement).checked,
       );
+      onReminderChange();
     }
     if (target.matches('[data-role="reminder-rule-delivery"]')) {
-      onReminderChange(
-        store.setReminderRuleDelivery(
-          ruleId,
-          target.value as Config["reminderProgram"]["rules"][number]["delivery"]["kind"],
-        ),
+      store.setReminderRuleDelivery(
+        ruleId,
+        target.value as ReminderDeliveryKind,
       );
+      onReminderChange();
     }
   });
-  reminderRuleTb.addEventListener("input", (event) => {
+  reminderRuleList.addEventListener("input", (event) => {
     const target = event.target as HTMLInputElement;
     if (target.matches('[data-role="reminder-rule-minutes"]')) {
-      const row = target.closest<HTMLTableRowElement>("tr[data-reminder-rule-id]");
+      const row = target.closest<HTMLDivElement>("[data-reminder-rule-id]");
       const ruleId = row?.dataset.reminderRuleId;
       if (!ruleId) {
         return;
       }
-      onReminderChange(
-        store.setReminderRuleMinutes(
-          ruleId,
-          Number.parseInt(target.value, 10),
-        ),
-      );
+      store.setReminderRuleMinutes(ruleId, Number.parseInt(target.value, 10));
+      onReminderChange();
     }
   });
-  reminderRuleTb.addEventListener("click", (event) => {
+  reminderRuleList.addEventListener("click", (event) => {
     const btn = (event.target as Element).closest(
       '[data-action="delete-reminder-rule"]',
     );
     if (!btn) {
       return;
     }
-    const row = btn.closest<HTMLTableRowElement>("tr[data-reminder-rule-id]");
+    const row = btn.closest<HTMLDivElement>("[data-reminder-rule-id]");
     const ruleId = row?.dataset.reminderRuleId;
     if (!ruleId) {
       return;
     }
-    onReminderChange(store.removeReminderRule(ruleId));
+    store.removeReminderRule(ruleId);
+    onReminderChange();
   });
   addReminderRuleBtn.addEventListener("click", () => {
-    onReminderChange(store.addReminderRule());
+    store.addReminderRule();
+    onReminderChange();
   });
 
   const statusClassNames = {
@@ -251,17 +341,38 @@ export function createUI(): void {
   const setStatus = (
     message: string,
     tone: keyof typeof statusClassNames,
+    detail?: string,
   ): void => {
     statusEl.textContent = message;
     statusEl.className = cx(styles.status, statusClassNames[tone]);
+
+    if (tone === "error" && detail) {
+      statusDetailBtn.hidden = false;
+      statusDetailBtn.textContent = "查看详情";
+      statusDetailBtn.setAttribute("aria-expanded", "false");
+      statusDetailEl.textContent = detail;
+      statusDetailEl.hidden = true;
+      return;
+    }
+
+    clearStatusDetail();
   };
 
+  statusDetailBtn.addEventListener("click", () => {
+    const willExpand = statusDetailEl.hidden;
+    statusDetailEl.hidden = !willExpand;
+    statusDetailBtn.textContent = willExpand ? "隐藏详情" : "查看详情";
+    statusDetailBtn.setAttribute("aria-expanded", String(willExpand));
+  });
+
   exportBtn.addEventListener("click", () => {
-    const currentCfg = persistConfig();
+    persistDialogState();
     handleExportAction({
       semKey,
       startInp,
-      readConfig: () => currentCfg,
+      readDuration: () => store.getDuration(),
+      readPeriods: () => store.getPeriods(),
+      readReminderProgram: () => store.getReminderProgram(),
       setStatus,
     });
   });

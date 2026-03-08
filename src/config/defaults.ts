@@ -2,8 +2,14 @@
 //  config/defaults.ts - 默认配置与存储命名空间
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { Config, Period, ReminderProgram } from "../types";
-import { clonePeriod, cloneReminderProgram, createReminderRule } from "./model";
+import type { Config, LoggingConfig, Period, ReminderProgram } from "../types";
+import { createDefaultLoggingConfig } from "../logging";
+import {
+  cloneLoggingConfig,
+  clonePeriod,
+  cloneReminderProgram,
+  createReminderProgramFromPreset,
+} from "./model";
 
 export const DEFAULT_PERIODS: Period[] = [
   { start: "08:00" },
@@ -22,18 +28,11 @@ export const DEFAULT_PERIODS: Period[] = [
 
 export const DEFAULT_DURATION = 45;
 
-export const DEFAULT_REMINDER_PROGRAM: ReminderProgram = {
-  version: 2,
-  rules: [
-    createReminderRule({
-      id: "default-course-start-countdown",
-      isEnabled: true,
-      offset: { minutesBeforeStart: 15 },
-      delivery: { kind: "DISPLAY" },
-      template: { kind: "course-start-countdown" },
-    }),
-  ],
-};
+export const DEFAULT_REMINDER_PROGRAM: ReminderProgram =
+  createReminderProgramFromPreset("standard");
+
+export const DEFAULT_LOGGING_CONFIG: LoggingConfig =
+  createDefaultLoggingConfig();
 
 export const STORAGE_NAMESPACE = "ics_";
 
@@ -42,5 +41,6 @@ export function defaultConfig(): Config {
     duration: DEFAULT_DURATION,
     periods: DEFAULT_PERIODS.map(clonePeriod),
     reminderProgram: cloneReminderProgram(DEFAULT_REMINDER_PROGRAM),
+    logging: cloneLoggingConfig(DEFAULT_LOGGING_CONFIG),
   };
 }

@@ -6,7 +6,20 @@ export interface Period {
   start: string;
 }
 
+export type LogLevel = "silent" | "error" | "warn" | "info" | "debug";
+
+export interface LoggingConfig {
+  level: LogLevel;
+  maxEntries: number;
+}
+
 export type ReminderDeliveryKind = "DISPLAY" | "AUDIO";
+export type ReminderPresetId =
+  | "disabled"
+  | "standard"
+  | "focus"
+  | "urgent"
+  | "custom";
 
 export interface ReminderOffset {
   minutesBeforeStart: number;
@@ -29,7 +42,8 @@ export interface ReminderRule {
 }
 
 export interface ReminderProgram {
-  version: 2;
+  version: 3;
+  presetId: ReminderPresetId;
   rules: ReminderRule[];
 }
 
@@ -37,6 +51,7 @@ export interface Config {
   duration: number;
   periods: Period[];
   reminderProgram: ReminderProgram;
+  logging: LoggingConfig;
 }
 
 export interface Course {

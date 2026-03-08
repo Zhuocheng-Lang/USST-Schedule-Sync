@@ -2,7 +2,13 @@
 //  core/calendar/ics.ts - 生成 iCalendar (.ics) 文件的核心逻辑
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { Config, Course } from "../../types";
+import { logger } from "../../logging";
+import type {
+  Course,
+  Period,
+  ReminderPresetId,
+  ReminderProgram,
+} from "../../types";
 import {
   analyzeWeekPattern,
   escapeICSText,
@@ -32,11 +38,24 @@ const VTIMEZONE_SHANGHAI = [
 export interface ICSResult {
   ics: string;
   eventCount: number;
+  reminderSummary: {
+    presetId: ReminderPresetId;
+    presetLabel: string;
+    activeRuleCount: number;
+    alarmsPerEvent: number;
+    emittedAlarmCount: number;
+    activeRuleDescriptions: string[];
+  };
 }
 
 const TZID = "Asia/Shanghai";
 const PRODID = "-//Zhuocheng Lang//USST Schedule Sync//CN";
 const WEEK_LABEL_PATTERN = /周次[：:]\s*(.+)$/;
+const calendarLogger = logger.child("core.calendar.ics");
+
+export interface GenerateICSOptions {
+  traceId?: string;
+}
 
 function buildEventUid(
   course: Course,
@@ -58,7 +77,9 @@ function buildEventUid(
   return stableUid(identity);
 }
 
-function normalizeCourseText(course: Course): Pick<Course, "location" | "teacher" | "rawWeeks"> {
+function normalizeCourseText(
+  course: Course,
+): Pick<Course, "location" | "teacher" | "rawWeeks"> {
   let location = normalizeText(course.location)
     .replace(/校区\s*/g, "校区 ")
     .replace(/\s*(?:教师|周次)[：:].*$/, "")
@@ -85,7 +106,11 @@ function normalizeCourseText(course: Course): Pick<Course, "location" | "teacher
   };
 }
 
-function pushOptionalDescription(lines: string[], teacher: string, rawWeeks: string): void {
+function pushOptionalDescription(
+  lines: string[],
+  teacher: string,
+  rawWeeks: string,
+): void {
   const parts: string[] = [];
   if (teacher) {
     parts.push(`教师：${escapeICSText(teacher)}`);
@@ -101,7 +126,11 @@ function pushOptionalDescription(lines: string[], teacher: string, rawWeeks: str
   lines.push(`DESCRIPTION:${parts.join("\\n")}`);
 }
 
-function pushOptionalTextLine(lines: string[], name: string, value: string): void {
+function pushOptionalTextLine(
+  lines: string[],
+  name: string,
+  value: string,
+): void {
   const normalized = value.trim();
   if (!normalized) {
     return;
@@ -113,7 +142,10 @@ function pushOptionalTextLine(lines: string[], name: string, value: string): voi
 export function generateICS(
   courses: Course[],
   firstMonday: string,
-  cfg: Config,
+  periods: Period[],
+  duration: number,
+  reminderProgram: ReminderProgram,
+  options: GenerateICSOptions = {},
 ): ICSResult {
   const dtstamp =
     new Date().toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z";
@@ -134,12 +166,18 @@ export function generateICS(
   }
 
   let eventCount = 0;
+  let emittedAlarmCount = 0;
+  let skippedCourseCount = 0;
+  const reminderSummary = compileReminderProgram(reminderProgram, {
+    courseName: "",
+  }).stats;
 
   for (const course of courses) {
-    const startPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pStart);
-    const endPeriod = getPeriodTime(cfg.periods, cfg.duration, course.pEnd);
+    const startPeriod = getPeriodTime(periods, duration, course.pStart);
+    const endPeriod = getPeriodTime(periods, duration, course.pEnd);
     const weekPattern = analyzeWeekPattern(course.weeks);
     if (!startPeriod || !endPeriod || !weekPattern) {
+      skippedCourseCount++;
       continue;
     }
 
@@ -180,11 +218,11 @@ export function generateICS(
       );
     }
 
-    lines.push(
-      ...compileReminderProgram(cfg.reminderProgram, {
-        courseName: course.name,
-      }).lines,
-    );
+    const compiledReminders = compileReminderProgram(reminderProgram, {
+      courseName: course.name,
+    });
+    lines.push(...compiledReminders.lines);
+    emittedAlarmCount += compiledReminders.stats.emittedAlarmCount;
 
     lines.push("END:VEVENT");
     eventCount++;
@@ -192,5 +230,37 @@ export function generateICS(
 
   lines.push("END:VCALENDAR");
 
-  return { ics: lines.map(foldLine).join("\r\n") + "\r\n", eventCount };
+  if (skippedCourseCount) {
+    calendarLogger.warn("部分课程因节次或周次信息无效被跳过", {
+      traceId: options.traceId,
+      context: {
+        courseCount: courses.length,
+        skippedCourseCount,
+      },
+    });
+  }
+
+  calendarLogger.info("ICS 生成完成", {
+    traceId: options.traceId,
+    context: {
+      courseCount: courses.length,
+      eventCount,
+      skippedCourseCount,
+      emittedAlarmCount,
+      presetId: reminderSummary.presetId,
+    },
+  });
+
+  return {
+    ics: lines.map(foldLine).join("\r\n") + "\r\n",
+    eventCount,
+    reminderSummary: {
+      presetId: reminderSummary.presetId,
+      presetLabel: reminderSummary.presetLabel,
+      activeRuleCount: reminderSummary.activeRuleCount,
+      alarmsPerEvent: reminderSummary.alarmsPerEvent,
+      emittedAlarmCount,
+      activeRuleDescriptions: reminderSummary.activeRuleDescriptions,
+    },
+  };
 }

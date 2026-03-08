@@ -9,5 +9,8 @@ export { stableUid } from "./id";
 export { analyzeWeekPattern, parseWeeks } from "./weeks";
 
 export function normalizeText(text: string): string {
-  return text.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
+  return text
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }

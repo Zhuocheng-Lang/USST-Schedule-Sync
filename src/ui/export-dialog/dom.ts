@@ -2,8 +2,9 @@
 //  ui/export-dialog/dom.ts - 导出对话框 DOM 结构构建
 // ════════════════════════════════════════════════════════════════════════════
 
-import type { Config } from "../../types";
-import { makePeriodRow, makeReminderRuleRow } from "../builders";
+import type { Period, ReminderProgram } from "../../types";
+import { REMINDER_PRESET_DEFINITIONS } from "../../config";
+import { makePeriodRow, makeReminderRuleCard } from "../builders";
 import { cx, styles } from "../css";
 
 function createTableHead(labels: readonly string[]): HTMLTableSectionElement {
@@ -22,12 +23,8 @@ function createTableHead(labels: readonly string[]): HTMLTableSectionElement {
 
 function createAlarmTipContent(): DocumentFragment {
   const fragment = document.createDocumentFragment();
-  const code = document.createElement("code");
-  code.textContent = "Reminder Program";
   fragment.append(
-    "每条规则会先编译为内部提醒节点，再为每个日历事件写入一个 ",
-    code,
-    " → VALARM，可叠加多条。",
+    "提醒会在导出时为每个课程事件写入一个或多个 VALARM，可叠加。",
     document.createElement("br"),
   );
 
@@ -47,10 +44,10 @@ function createAlarmTipContent(): DocumentFragment {
   audio.textContent = "响铃提醒";
   fragment.append(
     audio,
-    "：播放系统提示音（Apple Calendar / Outlook 支持）。",
+    "：使用日历客户端默认提示音，兼容性取决于客户端。",
     document.createElement("br"),
   );
-  fragment.append("全部关闭 = 不写入任何提醒。");
+  fragment.append("你可以先套用快捷方案，再按需改成自定义。");
 
   return fragment;
 }
@@ -66,14 +63,21 @@ export interface DialogElements {
   durInp: HTMLInputElement;
   periodTb: HTMLTableSectionElement;
   addPeriodBtn: HTMLButtonElement;
-  reminderRuleTb: HTMLTableSectionElement;
+  reminderPresetBar: HTMLDivElement;
+  reminderSummaryEl: HTMLDivElement;
+  reminderPreviewList: HTMLUListElement;
+  reminderRuleList: HTMLDivElement;
   addReminderRuleBtn: HTMLButtonElement;
   exportBtn: HTMLButtonElement;
   statusEl: HTMLDivElement;
+  statusDetailBtn: HTMLButtonElement;
+  statusDetailEl: HTMLPreElement;
 }
 
 export function createDialogElements(
-  cfg: Config,
+  duration: number,
+  periods: Period[],
+  reminderProgram: ReminderProgram,
   defaultDate: string,
 ): DialogElements {
   const backdrop = Object.assign(document.createElement("div"), {
@@ -222,7 +226,7 @@ export function createDialogElements(
     className: styles.field,
     min: "1",
     max: "240",
-    value: String(cfg.duration),
+    value: String(duration),
   });
   const tipDur = Object.assign(document.createElement("div"), {
     className: styles.tip,
@@ -240,8 +244,8 @@ export function createDialogElements(
   periodTbl.appendChild(createTableHead(["节", "开始", "结束", ""]));
   const periodTb = document.createElement("tbody");
   periodTb.id = "ics-period-tbody";
-  cfg.periods.forEach((period, index) =>
-    periodTb.appendChild(makePeriodRow(index, period.start, cfg.duration)),
+  periods.forEach((period, index) =>
+    periodTb.appendChild(makePeriodRow(index, period.start, duration)),
   );
   periodTbl.appendChild(periodTb);
 
@@ -278,23 +282,78 @@ export function createDialogElements(
   });
   alarmTip.appendChild(createAlarmTipContent());
 
-  const alarmTbl = document.createElement("table");
-  alarmTbl.className = styles.table;
-  alarmTbl.appendChild(createTableHead(["开启", "提前时间", "提醒方式", ""]));
-  const reminderRuleTb = document.createElement("tbody");
-  reminderRuleTb.id = "ics-reminder-rule-tbody";
-  cfg.reminderProgram.rules.forEach((rule, index) =>
-    reminderRuleTb.appendChild(makeReminderRuleRow(index, rule)),
+  const presetHeading = Object.assign(document.createElement("div"), {
+    className: styles.sectionHeading,
+    textContent: "快捷方案",
+  });
+  const reminderPresetBar = Object.assign(document.createElement("div"), {
+    className: styles.presetGrid,
+    id: "ics-reminder-preset-bar",
+  });
+  for (const preset of REMINDER_PRESET_DEFINITIONS) {
+    const isActive = reminderProgram.presetId === preset.id;
+    const btn = Object.assign(document.createElement("button"), {
+      type: "button",
+      className: cx(styles.presetButton, isActive && styles.presetButtonActive),
+    });
+    btn.dataset.role = "reminder-preset";
+    btn.dataset.presetId = preset.id;
+    btn.setAttribute("aria-pressed", String(isActive));
+
+    const name = Object.assign(document.createElement("span"), {
+      className: styles.presetButtonTitle,
+      textContent: preset.label,
+    });
+    const desc = Object.assign(document.createElement("span"), {
+      className: styles.presetButtonDesc,
+      textContent: preset.description,
+    });
+    btn.append(name, desc);
+    reminderPresetBar.appendChild(btn);
+  }
+
+  const summaryHeading = Object.assign(document.createElement("div"), {
+    className: styles.sectionHeading,
+    textContent: "导出预览",
+  });
+  const reminderSummaryEl = Object.assign(document.createElement("div"), {
+    className: styles.reminderSummary,
+    id: "ics-reminder-summary",
+  });
+  const reminderPreviewList = Object.assign(document.createElement("ul"), {
+    className: styles.reminderPreviewList,
+    id: "ics-reminder-preview-list",
+  });
+
+  const editorHeading = Object.assign(document.createElement("div"), {
+    className: styles.sectionHeading,
+    textContent: "自定义提醒",
+  });
+  const reminderRuleList = Object.assign(document.createElement("div"), {
+    className: styles.reminderCardList,
+    id: "ics-reminder-rule-list",
+  });
+  reminderProgram.rules.forEach((rule, index) =>
+    reminderRuleList.appendChild(makeReminderRuleCard(index, rule)),
   );
-  alarmTbl.appendChild(reminderRuleTb);
 
   const addReminderRuleBtn = Object.assign(document.createElement("button"), {
     type: "button",
     id: "ics-add-reminder-rule-btn",
     className: styles.addButton,
-    textContent: "＋ 添加提醒规则",
+    textContent: "＋ 新增自定义提醒",
   });
-  panelAlarm.append(alarmTip, alarmTbl, addReminderRuleBtn);
+  panelAlarm.append(
+    alarmTip,
+    presetHeading,
+    reminderPresetBar,
+    summaryHeading,
+    reminderSummaryEl,
+    reminderPreviewList,
+    editorHeading,
+    reminderRuleList,
+    addReminderRuleBtn,
+  );
 
   panelsEl.append(panelExport, panelSchedule, panelAlarm);
 
@@ -311,7 +370,28 @@ export function createDialogElements(
     className: cx(styles.status, styles.statusInfo),
   });
   statusEl.setAttribute("aria-live", "polite");
-  footer.append(exportBtn, statusEl);
+  const statusWrap = Object.assign(document.createElement("div"), {
+    className: styles.statusWrap,
+  });
+  const statusActions = Object.assign(document.createElement("div"), {
+    className: styles.statusActions,
+  });
+  const statusDetailBtn = Object.assign(document.createElement("button"), {
+    type: "button",
+    className: styles.statusDetailButton,
+    textContent: "查看详情",
+    hidden: true,
+  });
+  statusDetailBtn.setAttribute("aria-controls", "ics-status-detail");
+  statusDetailBtn.setAttribute("aria-expanded", "false");
+  const statusDetailEl = Object.assign(document.createElement("pre"), {
+    id: "ics-status-detail",
+    className: styles.statusDetail,
+    hidden: true,
+  });
+  statusActions.appendChild(statusDetailBtn);
+  statusWrap.append(statusEl, statusActions, statusDetailEl);
+  footer.append(exportBtn, statusWrap);
 
   dialog.append(header, tabBar, panelsEl, footer);
   document.body.appendChild(dialog);
@@ -327,9 +407,14 @@ export function createDialogElements(
     durInp,
     periodTb,
     addPeriodBtn,
-    reminderRuleTb,
+    reminderPresetBar,
+    reminderSummaryEl,
+    reminderPreviewList,
+    reminderRuleList,
     addReminderRuleBtn,
     exportBtn,
     statusEl,
+    statusDetailBtn,
+    statusDetailEl,
   };
 }
